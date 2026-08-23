@@ -6,7 +6,9 @@ const classData = {
 
 const combatConfig = {
 	enemy: { name: 'Goblin', maxHp: 50, strength: 6, defense: 3, agility: 4, luck: 2 },
-	actionDelay: 850,
+	messagePause: 760,
+	turnPause: 900,
+	ashDuration: 900,
 	defenseMultiplier: 0.45,
 	fleeBaseChance: 0.35,
 	fleeAgilityFactor: 0.03,
@@ -40,6 +42,9 @@ const dialogueLog = document.querySelector('#dialogue-log');
 const turnIndicator = document.querySelector('#turn-indicator');
 const enemyHpValue = document.querySelector('#enemy-hp-value');
 const enemyHpBar = document.querySelector('#enemy-hp-bar');
+const playerHpBar = document.querySelector('#hp-bar');
+const playerManaBar = document.querySelector('#mana-bar');
+const playerXpBar = document.querySelector('#xp-bar');
 let selectedClass = null;
 let player = null;
 let enemy = null;
@@ -47,6 +52,11 @@ let combatState = COMBAT_STATES.PLAYER_TURN;
 let isDefending = false;
 const dialogueHistory = [];
 const maxVisibleMessages = 3;
+const dialogueQueue = [];
+let isProcessingDialogue = false;
+let previousPlayerHp = null;
+let previousEnemyHp = null;
+dialogueLog.style.setProperty('--ash-duration', `${combatConfig.ashDuration}ms`);
 
 function showScreen(screenToShow) {
 	[menuScreen, classScreen, gameScreen].forEach((screen) => {
@@ -67,35 +77,76 @@ function selectClass(card) {
 function populateHud() {
 	const data = classData[selectedClass];
 	player = { ...data, currentHp: data.hp, currentMana: data.mana };
+	previousPlayerHp = null;
+	previousEnemyHp = null;
 	document.querySelector('#character-name').textContent = data.name;
 	document.querySelector('#character-class').textContent = data.label;
 	document.querySelector('#hp-value').textContent = `${data.hp} / ${data.hp}`;
 	document.querySelector('#mana-value').textContent = `${data.mana} / ${data.mana}`;
-	document.querySelector('#hp-bar').style.width = '100%';
-	document.querySelector('#mana-bar').style.width = '100%';
+	playerHpBar.style.width = '100%';
+	playerManaBar.style.width = '100%';
+	playerXpBar.style.width = '0%';
 	document.querySelector('#hud-stats').innerHTML = Object.entries(data.stats).map(([stat, value]) => `<div><dt>${stat}</dt><dd>${value}</dd><button type="button" disabled aria-label="Adicionar ponto em ${stat}">+</button></div>`).join('');
 }
 
-function setDialogue(message) {
-	const removedMessage = dialogueHistory.length >= maxVisibleMessages ? dialogueHistory.shift() : null;
-	dialogueHistory.push(message);
-	renderDialogueLog(removedMessage);
+function delay(duration) {
+	return new Promise((resolve) => window.setTimeout(resolve, duration));
 }
 
-function renderDialogueLog(removedMessage = null) {
-	dialogueLog.innerHTML = dialogueHistory.map((message, index) => {
-		const age = dialogueHistory.length - index - 1;
-		const ageClass = age === 0 ? 'log-message-new' : age === dialogueHistory.length - 1 ? 'log-message-oldest' : 'log-message-middle';
-		return `<p class="log-message ${ageClass}">${message}</p>`;
-	}).join('');
-	if (!removedMessage) return;
+function setDialogue(message) {
+	return enqueueDialogue(message);
+}
 
-	const exitingMessage = document.createElement('p');
-	exitingMessage.className = 'log-message log-message-exiting';
-	exitingMessage.textContent = removedMessage;
-	dialogueLog.appendChild(exitingMessage);
-	window.requestAnimationFrame(() => exitingMessage.classList.add('is-evaporating'));
-	window.setTimeout(() => exitingMessage.remove(), 650);
+function enqueueDialogue(message) {
+	return new Promise((resolve) => {
+		dialogueQueue.push({ message, resolve });
+		processDialogueQueue();
+	});
+}
+
+async function processDialogueQueue() {
+	if (isProcessingDialogue) return;
+	isProcessingDialogue = true;
+	while (dialogueQueue.length) {
+		const queuedMessage = dialogueQueue.shift();
+		const exitAnimation = renderDialogueMessage(queuedMessage.message);
+		await Promise.all([delay(combatConfig.messagePause), exitAnimation]);
+		queuedMessage.resolve();
+	}
+	isProcessingDialogue = false;
+}
+
+function renderDialogueMessage(message) {
+	dialogueHistory.push(message);
+	const messageElement = document.createElement('p');
+	messageElement.className = 'log-message log-message-new';
+	messageElement.textContent = message;
+	dialogueLog.appendChild(messageElement);
+	updateDialogueAges();
+	if (dialogueHistory.length <= maxVisibleMessages) return Promise.resolve();
+
+	dialogueHistory.shift();
+	const oldestElement = [...dialogueLog.children].find((element) => !element.classList.contains('log-message-exiting'));
+	if (!oldestElement) return Promise.resolve();
+	oldestElement.classList.remove('log-message-new', 'log-message-middle', 'log-message-oldest');
+	oldestElement.classList.add('log-message-exiting');
+	window.requestAnimationFrame(() => oldestElement.classList.add('is-evaporating'));
+	return new Promise((resolve) => {
+		oldestElement.addEventListener('animationend', () => {
+			oldestElement.remove();
+			updateDialogueAges();
+			resolve();
+		}, { once: true });
+	});
+}
+
+function updateDialogueAges() {
+	const activeMessages = [...dialogueLog.children].filter((element) => !element.classList.contains('log-message-exiting'));
+	activeMessages.forEach((element, index) => {
+		element.classList.remove('log-message-new', 'log-message-middle', 'log-message-oldest');
+		const age = activeMessages.length - index - 1;
+		element.classList.add(age === 0 ? 'log-message-new' : age === activeMessages.length - 1 ? 'log-message-oldest' : 'log-message-middle');
+	});
 }
 
 function setCombatState(nextState) {
@@ -107,11 +158,27 @@ function setCombatState(nextState) {
 }
 
 function updateHpDisplays() {
-	const playerHpBar = document.querySelector('#hp-bar');
 	document.querySelector('#hp-value').textContent = `${player.currentHp} / ${player.hp}`;
-	playerHpBar.style.width = `${(player.currentHp / player.hp) * 100}%`;
+	updateBar(playerHpBar, player.currentHp, player.hp, previousPlayerHp !== null && player.currentHp < previousPlayerHp);
 	enemyHpValue.textContent = `${enemy.currentHp} / ${enemy.maxHp}`;
-	enemyHpBar.style.width = `${(enemy.currentHp / enemy.maxHp) * 100}%`;
+	updateBar(enemyHpBar, enemy.currentHp, enemy.maxHp, previousEnemyHp !== null && enemy.currentHp < previousEnemyHp);
+	previousPlayerHp = player.currentHp;
+	previousEnemyHp = enemy.currentHp;
+}
+
+function updateBar(bar, currentValue, maximumValue, damaged = false) {
+	const percentage = Math.max(0, Math.min(100, (currentValue / maximumValue) * 100));
+	bar.style.width = `${percentage}%`;
+	if (!damaged) return;
+	pulseBar(bar);
+}
+
+function pulseBar(bar) {
+	bar.classList.remove('bar-damage');
+	window.requestAnimationFrame(() => {
+		bar.classList.add('bar-damage');
+		bar.addEventListener('animationend', () => bar.classList.remove('bar-damage'), { once: true });
+	});
 }
 
 function randomDamage(attackerStrength, targetDefense) {
@@ -149,141 +216,121 @@ function calculateAttack(attacker, defenderDefense) {
 	return { critical, damage: critical ? Math.max(normalDamage + 1, Math.floor(normalDamage * combatConfig.criticalMultiplier)) : normalDamage };
 }
 
-function resetCombat() {
+async function resetCombat() {
 	enemy = { ...combatConfig.enemy, currentHp: combatConfig.enemy.maxHp };
 	isDefending = false;
+	dialogueHistory.length = 0;
+	dialogueQueue.length = 0;
+	dialogueLog.replaceChildren();
 	updateHpDisplays();
 	const playerStarts = determineInitiative(player, enemy);
 	setCombatState(playerStarts ? COMBAT_STATES.PLAYER_TURN : COMBAT_STATES.ENEMY_TURN);
-	setDialogue('Um Goblin apareceu!');
-	window.setTimeout(() => {
-		if (combatState === COMBAT_STATES.PLAYER_TURN) {
-			setDialogue(`${player.name} foi mais rapido!`);
-			window.setTimeout(() => setDialogue('Seu turno.'), combatConfig.actionDelay);
-			return;
-		}
-		if (combatState === COMBAT_STATES.ENEMY_TURN) {
-			setDialogue(`${enemy.name} tomou a iniciativa!`);
-			window.setTimeout(enemyTurn, combatConfig.actionDelay);
-		}
-	}, combatConfig.actionDelay);
+	actionButtons.forEach((button) => { button.disabled = true; });
+	await setDialogue('Um Goblin apareceu!');
+	if (combatState === COMBAT_STATES.PLAYER_TURN) {
+		await setDialogue(`${player.name} foi mais rapido!`);
+		await setDialogue('Seu turno.');
+		setCombatState(COMBAT_STATES.PLAYER_TURN);
+		return;
+	}
+	if (combatState === COMBAT_STATES.ENEMY_TURN) {
+		await setDialogue(`${enemy.name} tomou a iniciativa!`);
+		await enemyTurn();
+	}
 }
 
-function finishCombat(state, message) {
+async function finishCombat(state, message) {
 	setCombatState(state);
-	setDialogue(message);
+	await setDialogue(message);
 }
 
-function enemyTurn() {
+async function enemyTurn() {
 	if (combatState !== COMBAT_STATES.ENEMY_TURN || enemy.currentHp <= 0 || player.currentHp <= 0) return;
-	setDialogue(`${enemy.name} atacou!`);
-	window.setTimeout(() => {
-		if (combatState !== COMBAT_STATES.ENEMY_TURN) return;
-		if (evadesAttack(player)) {
-			setDialogue(`Voce desviou do ataque do ${enemy.name}!`);
-			window.setTimeout(() => finishEnemyTurn(), combatConfig.actionDelay);
-			return;
-		}
-		const attackResult = calculateAttack(enemy, player.stats.DEFESA);
-		let damage = attackResult.damage;
-		if (isDefending) {
-			damage = Math.max(1, Math.floor(damage * combatConfig.defenseMultiplier));
-			setDialogue('Voce bloqueou parte do ataque!');
-			isDefending = false;
-			window.setTimeout(() => applyEnemyDamage(damage, attackResult.critical), combatConfig.actionDelay);
-			return;
-		}
-		applyEnemyDamage(damage, attackResult.critical);
-	}, combatConfig.actionDelay);
+	await setDialogue(`${enemy.name} atacou!`);
+	if (combatState !== COMBAT_STATES.ENEMY_TURN) return;
+	if (evadesAttack(player)) {
+		await setDialogue(`Voce desviou do ataque do ${enemy.name}!`);
+		await finishEnemyTurn();
+		return;
+	}
+	const attackResult = calculateAttack(enemy, player.stats.DEFESA);
+	let damage = attackResult.damage;
+	if (isDefending) {
+		damage = Math.max(1, Math.floor(damage * combatConfig.defenseMultiplier));
+		isDefending = false;
+		await setDialogue('Voce bloqueou parte do ataque!');
+	}
+	await applyEnemyDamage(damage, attackResult.critical);
 }
 
-function finishEnemyTurn() {
+async function finishEnemyTurn() {
 	if (player.currentHp <= 0 || enemy.currentHp <= 0) return;
+	await setDialogue('Seu turno.');
 	setCombatState(COMBAT_STATES.PLAYER_TURN);
-	setDialogue('Seu turno.');
 }
 
-function applyEnemyDamage(damage, critical) {
+async function applyEnemyDamage(damage, critical) {
 	player.currentHp = Math.max(0, player.currentHp - damage);
 	updateHpDisplays();
-	if (critical) setDialogue('ACERTO CRITICO!');
-	else setDialogue(`${player.name} sofreu ${damage} de dano.`);
-	window.setTimeout(() => {
-		if (player.currentHp <= 0) {
-			finishCombat(COMBAT_STATES.DEFEAT, 'Voce foi derrotado...');
-			return;
-		}
-		if (critical) {
-			setDialogue(`${enemy.name} causou ${damage} de dano!`);
-			window.setTimeout(finishEnemyTurn, combatConfig.actionDelay);
-			return;
-		}
-		finishEnemyTurn();
-	}, combatConfig.actionDelay);
+	if (critical) {
+		await setDialogue('ACERTO CRITICO!');
+		await setDialogue(`${enemy.name} causou ${damage} de dano!`);
+	} else {
+		await setDialogue(`${player.name} sofreu ${damage} de dano.`);
+	}
+	if (player.currentHp <= 0) {
+		await finishCombat(COMBAT_STATES.DEFEAT, 'Voce foi derrotado...');
+		return;
+	}
+	await finishEnemyTurn();
 }
 
-function attack() {
+async function attack() {
 	if (combatState !== COMBAT_STATES.PLAYER_TURN) return;
+	setCombatState(COMBAT_STATES.ENEMY_TURN);
+	await setDialogue(`${player.name} atacou o ${enemy.name}!`);
+	if (combatState !== COMBAT_STATES.ENEMY_TURN) return;
 	if (evadesAttack(enemy)) {
-		setCombatState(COMBAT_STATES.ENEMY_TURN);
-		setDialogue(`${player.name} atacou!`);
-		window.setTimeout(() => {
-			if (combatState !== COMBAT_STATES.ENEMY_TURN) return;
-			setDialogue(`${enemy.name} desviou do ataque!`);
-			window.setTimeout(enemyTurn, combatConfig.actionDelay);
-		}, combatConfig.actionDelay);
+		await setDialogue(`${enemy.name} desviou do ataque!`);
+		await enemyTurn();
 		return;
 	}
 	const attackResult = calculateAttack(player, enemy.defense);
 	const damage = attackResult.damage;
-	setCombatState(COMBAT_STATES.ENEMY_TURN);
 	enemy.currentHp = Math.max(0, enemy.currentHp - damage);
 	updateHpDisplays();
-	setDialogue(`${player.name} atacou o ${enemy.name}!`);
-	window.setTimeout(() => {
-		if (attackResult.critical) {
-			setDialogue('ACERTO CRITICO!');
-			window.setTimeout(() => {
-				setDialogue(`${player.name} causou ${damage} de dano!`);
-				if (enemy.currentHp <= 0) {
-					window.setTimeout(() => {
-						finishCombat(COMBAT_STATES.VICTORY, `${enemy.name} foi derrotado!`);
-						window.setTimeout(() => setDialogue('Voce venceu a batalha!'), combatConfig.actionDelay);
-					}, combatConfig.actionDelay);
-					return;
-				}
-				window.setTimeout(enemyTurn, combatConfig.actionDelay);
-			}, combatConfig.actionDelay);
-			return;
-		}
-		if (enemy.currentHp <= 0) {
-			finishCombat(COMBAT_STATES.VICTORY, `${enemy.name} foi derrotado!`);
-			window.setTimeout(() => setDialogue('Voce venceu a batalha!'), combatConfig.actionDelay);
-			return;
-		}
-		setDialogue(`${enemy.name} sofreu ${damage} de dano.`);
-		window.setTimeout(enemyTurn, combatConfig.actionDelay);
-	}, combatConfig.actionDelay);
+	if (attackResult.critical) {
+		await setDialogue('ACERTO CRITICO!');
+		await setDialogue(`${player.name} causou ${damage} de dano!`);
+	} else {
+		await setDialogue(`${enemy.name} sofreu ${damage} de dano.`);
+	}
+	if (enemy.currentHp <= 0) {
+		await finishCombat(COMBAT_STATES.VICTORY, `${enemy.name} foi derrotado!`);
+		await setDialogue('Voce venceu a batalha!');
+		return;
+	}
+	await enemyTurn();
 }
 
-function defend() {
+async function defend() {
 	if (combatState !== COMBAT_STATES.PLAYER_TURN) return;
 	isDefending = true;
 	setCombatState(COMBAT_STATES.ENEMY_TURN);
-	setDialogue(`${player.name} assumiu uma posicao defensiva.`);
-	window.setTimeout(enemyTurn, combatConfig.actionDelay);
+	await setDialogue(`${player.name} assumiu uma posicao defensiva.`);
+	await enemyTurn();
 }
 
-function escape() {
+async function escape() {
 	if (combatState !== COMBAT_STATES.PLAYER_TURN) return;
 	const chance = Math.min(0.9, combatConfig.fleeBaseChance + player.stats.AGILIDADE * combatConfig.fleeAgilityFactor);
 	if (Math.random() < chance) {
-		finishCombat(COMBAT_STATES.ESCAPED, 'Voce conseguiu fugir da batalha!');
+		await finishCombat(COMBAT_STATES.ESCAPED, 'Voce conseguiu fugir da batalha!');
 		return;
 	}
 	setCombatState(COMBAT_STATES.ENEMY_TURN);
-	setDialogue('Voce nao conseguiu fugir!');
-	window.setTimeout(enemyTurn, combatConfig.actionDelay);
+	await setDialogue('Voce nao conseguiu fugir!');
+	await enemyTurn();
 }
 
 playButton.addEventListener('click', () => showScreen(classScreen));
@@ -296,8 +343,8 @@ classCards.forEach((card) => {
 confirmButton.addEventListener('click', () => {
 	if (!selectedClass) return;
 	populateHud();
-	resetCombat();
 	showScreen(gameScreen);
+	resetCombat();
 });
 
 attackButton.addEventListener('click', attack);

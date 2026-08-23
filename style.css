@@ -1,17 +1,20 @@
 /* Animated combat history layered over the existing dialogue panel. */
-.dialogue-box { display: block; min-height: 132px; padding-top: 16px; padding-bottom: 16px; overflow: hidden; }
-.dialogue-log { min-height: 98px; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; }
-.log-message { position: relative; margin: 0; padding: 3px 14px 3px 0; color: #898983; font: 13px Georgia, serif; line-height: 1.3; transition: opacity .35s ease, transform .35s ease, filter .35s ease; }
+.bar-fill { transition: width 550ms cubic-bezier(.22,.61,.36,1) !important; will-change: width; }
+.bar-damage { animation: status-damage-pulse 550ms ease; }
+@keyframes status-damage-pulse { 0%, 100% { filter: brightness(1); } 32% { filter: brightness(1.3); } 65% { filter: brightness(.9); } }
+.dialogue-box { display: block !important; height: 132px !important; min-height: 132px !important; max-height: 132px !important; padding-top: 16px !important; padding-bottom: 16px !important; overflow: hidden; }
+.dialogue-log { height: 98px; min-height: 98px; max-height: 98px; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; overflow: hidden; }
+.log-message { position: relative; flex: 0 0 auto; margin: 0; padding: 3px 14px 3px 0; color: #898983; font: 13px Georgia, serif; line-height: 1.3; transition: opacity .35s ease, transform .35s ease, filter .35s ease; }
 .log-message::after { content: ''; position: absolute; left: 0; right: 14%; bottom: 0; height: 1px; background: linear-gradient(90deg, rgba(200,155,75,.18), transparent); }
 .log-message-new { color: #f0e4cb; font-size: 16px; text-shadow: 0 0 12px rgba(200,155,75,.16); }
 .log-message-middle { color: #b8b3a7; opacity: .78; }
 .log-message-oldest { color: #777872; opacity: .48; filter: blur(.15px); }
-.log-message-exiting { position: absolute; left: 45px; right: 28px; bottom: 17px; z-index: 2; color: #a99b80; opacity: .7; pointer-events: none; }
+.log-message-exiting { position: relative; flex: 0 0 auto; color: #a99b80; opacity: .7; pointer-events: none; z-index: 1; }
 .log-message-exiting::before, .log-message-exiting::after { content: ''; position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--gold); opacity: .55; }
 .log-message-exiting::before { left: 28%; top: 2px; }.log-message-exiting::after { left: 67%; bottom: 1px; width: 3px; height: 3px; }
-.log-message-exiting.is-evaporating { animation: log-ash-dissolve .65s ease forwards; }
-@keyframes log-ash-dissolve { 0% { opacity: .7; filter: blur(0); transform: translateY(0) scale(1); } 45% { opacity: .4; filter: blur(1px); transform: translateY(-8px) scale(.98); } 100% { opacity: 0; filter: blur(5px); transform: translateY(-23px) scale(.9); letter-spacing: .08em; } }
-@media (max-width: 650px) { .dialogue-box { min-height: 122px; padding-left: 35px; }.dialogue-log { min-height: 88px; }.log-message-exiting { left: 35px; right: 22px; } }
+.log-message-exiting.is-evaporating { animation: log-ash-dissolve var(--ash-duration, 900ms) ease forwards; animation-fill-mode: forwards; }
+@keyframes log-ash-dissolve { 0% { opacity: .7; filter: blur(0); transform: translateY(0); } 45% { opacity: .4; filter: blur(1px); transform: translateY(-8px); } 100% { opacity: 0; filter: blur(5px); transform: translateY(-23px); letter-spacing: .08em; } }
+@media (max-width: 650px) { .dialogue-box { min-height: 122px; padding-left: 35px; }.dialogue-log { min-height: 88px; }.log-message-exiting { left: auto; right: auto; } }
 :root { --ink: #080a0e; --deep: #10151d; --panel: #171d25; --panel-light: #202832; --line: #4d4538; --gold: #c89b4b; --gold-bright: #f0c96b; --muted-gold: #806b49; --text: #e9e0cf; --muted: #908d86; --red: #bd4b4d; --blue: #427bb8; --violet: #8270c0; }
 * { box-sizing: border-box; }
 html, body { margin: 0; min-width: 320px; min-height: 100%; background: var(--ink); color: var(--text); font-family: "Trebuchet MS", "Segoe UI", sans-serif; }
