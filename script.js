@@ -21,7 +21,21 @@ const combatConfig = {
 	evasionAgilityFactor: 0.01,
 	evasionMaxChance: 0.18,
 	initiativeAgilityFactor: 0.025,
-	initiativeMaxShift: 0.2
+	initiativeMaxShift: 0.2,
+	timingCycleDuration: 1800,
+	timingDuration: 4500,
+	timingFeedbackPause: 450,
+	timingZones: [
+		{ max: 0.22, label: 'RUIM', multiplier: 0.7 },
+		{ max: 0.36, label: 'NORMAL', multiplier: 1 },
+		{ max: 0.44, label: 'BOM', multiplier: 1.15 },
+		{ max: 0.47, label: 'OTIMO', multiplier: 1.3 },
+		{ max: 0.53, label: 'PERFEITO', multiplier: 1.5 },
+		{ max: 0.56, label: 'OTIMO', multiplier: 1.3 },
+		{ max: 0.64, label: 'BOM', multiplier: 1.15 },
+		{ max: 0.78, label: 'NORMAL', multiplier: 1 },
+		{ max: 1, label: 'RUIM', multiplier: 0.7 }
+	],
 };
 
 const COMBAT_STATES = Object.freeze({ PLAYER_TURN: 'PLAYER_TURN', ENEMY_TURN: 'ENEMY_TURN', VICTORY: 'VICTORY', DEFEAT: 'DEFEAT', ESCAPED: 'ESCAPED' });
@@ -42,6 +56,10 @@ const dialogueLog = document.querySelector('#dialogue-log');
 const turnIndicator = document.querySelector('#turn-indicator');
 const enemyHpValue = document.querySelector('#enemy-hp-value');
 const enemyHpBar = document.querySelector('#enemy-hp-bar');
+const timingGame = document.querySelector('#timing-game');
+const timingTrack = document.querySelector('#timing-track');
+const timingMarker = document.querySelector('#timing-marker');
+const timingFeedback = document.querySelector('#timing-feedback');
 const playerHpBar = document.querySelector('#hp-bar');
 const playerManaBar = document.querySelector('#mana-bar');
 const playerXpBar = document.querySelector('#xp-bar');
@@ -50,6 +68,7 @@ let player = null;
 let enemy = null;
 let combatState = COMBAT_STATES.PLAYER_TURN;
 let isDefending = false;
+let timingSession = null;
 const dialogueHistory = [];
 const maxVisibleMessages = 3;
 const dialogueQueue = [];
@@ -216,6 +235,64 @@ function calculateAttack(attacker, defenderDefense) {
 	return { critical, damage: critical ? Math.max(normalDamage + 1, Math.floor(normalDamage * combatConfig.criticalMultiplier)) : normalDamage };
 }
 
+function calculateTimingQuality(position) {
+	return combatConfig.timingZones.find((zone) => position <= zone.max) || combatConfig.timingZones[combatConfig.timingZones.length - 1];
+}
+
+function startTimingGame() {
+	return new Promise((resolve) => {
+		const session = { resolved: false, rafId: 0, startedAt: performance.now(), resolve };
+		timingSession = session;
+		timingGame.classList.remove('is-hidden', 'timing-complete');
+		timingFeedback.textContent = 'AGUARDE O MARCADOR';
+		timingFeedback.className = 'timing-feedback';
+
+		const complete = () => completeTimingGame(session);
+		const onKeyDown = (event) => {
+			if (event.code !== 'Space' || event.repeat || timingSession !== session) return;
+			event.preventDefault();
+			complete();
+		};
+		const animate = (now) => {
+			if (session.resolved) return;
+			if (now - session.startedAt >= combatConfig.timingDuration) {
+				complete();
+				return;
+			}
+			const cycleProgress = ((now - session.startedAt) % combatConfig.timingCycleDuration) / combatConfig.timingCycleDuration;
+			const position = cycleProgress <= 0.5 ? cycleProgress * 2 : 2 - cycleProgress * 2;
+			timingMarker.style.left = `${position * 100}%`;
+			session.rafId = window.requestAnimationFrame(animate);
+		};
+
+		timingGame.addEventListener('click', complete);
+		window.addEventListener('keydown', onKeyDown);
+		session.cleanup = () => {
+			window.cancelAnimationFrame(session.rafId);
+			timingGame.removeEventListener('click', complete);
+			window.removeEventListener('keydown', onKeyDown);
+		};
+		session.rafId = window.requestAnimationFrame(animate);
+	});
+}
+
+function completeTimingGame(session) {
+	if (session.resolved || timingSession !== session) return;
+	session.resolved = true;
+	session.cleanup();
+	const position = Math.max(0, Math.min(1, parseFloat(timingMarker.style.left || '0') / 100));
+	const result = calculateTimingQuality(position);
+	timingFeedback.textContent = `${result.label}!`;
+	timingFeedback.classList.add('is-result', `timing-${result.label.toLowerCase()}`);
+	timingGame.classList.add('timing-complete');
+	delay(combatConfig.timingFeedbackPause).then(() => {
+		if (timingSession !== session) return;
+		timingGame.classList.add('is-hidden');
+		timingSession = null;
+		session.resolve(result);
+	});
+}
+
 async function resetCombat() {
 	enemy = { ...combatConfig.enemy, currentHp: combatConfig.enemy.maxHp };
 	isDefending = false;
@@ -288,7 +365,9 @@ async function applyEnemyDamage(damage, critical) {
 async function attack() {
 	if (combatState !== COMBAT_STATES.PLAYER_TURN) return;
 	setCombatState(COMBAT_STATES.ENEMY_TURN);
+	const timingResult = await startTimingGame();
 	await setDialogue(`${player.name} atacou o ${enemy.name}!`);
+	await setDialogue(`${timingResult.label}!`);
 	if (combatState !== COMBAT_STATES.ENEMY_TURN) return;
 	if (evadesAttack(enemy)) {
 		await setDialogue(`${enemy.name} desviou do ataque!`);
@@ -296,7 +375,7 @@ async function attack() {
 		return;
 	}
 	const attackResult = calculateAttack(player, enemy.defense);
-	const damage = attackResult.damage;
+	const damage = Math.max(1, Math.floor(attackResult.damage * timingResult.multiplier));
 	enemy.currentHp = Math.max(0, enemy.currentHp - damage);
 	updateHpDisplays();
 	if (attackResult.critical) {
