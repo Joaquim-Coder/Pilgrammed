@@ -5,12 +5,21 @@ const classData = {
 };
 
 const combatConfig = {
-	enemy: { name: 'Goblin', maxHp: 50, strength: 6, defense: 3, agility: 4 },
+	enemy: { name: 'Goblin', maxHp: 50, strength: 6, defense: 3, agility: 4, luck: 2 },
 	actionDelay: 850,
 	defenseMultiplier: 0.45,
 	fleeBaseChance: 0.35,
 	fleeAgilityFactor: 0.03,
-	damageVariance: 2
+	damageVariance: 2,
+	criticalBaseChance: 0.05,
+	criticalLuckFactor: 0.01,
+	criticalMaxChance: 0.15,
+	criticalMultiplier: 1.75,
+	evasionBaseChance: 0.03,
+	evasionAgilityFactor: 0.01,
+	evasionMaxChance: 0.18,
+	initiativeAgilityFactor: 0.025,
+	initiativeMaxShift: 0.2
 };
 
 const COMBAT_STATES = Object.freeze({ PLAYER_TURN: 'PLAYER_TURN', ENEMY_TURN: 'ENEMY_TURN', VICTORY: 'VICTORY', DEFEAT: 'DEFEAT', ESCAPED: 'ESCAPED' });
@@ -27,7 +36,7 @@ const skillsButton = document.querySelector('#skills-button');
 const itemsButton = document.querySelector('#items-button');
 const defendButton = document.querySelector('#defend-button');
 const escapeButton = document.querySelector('#escape-button');
-const dialogueText = document.querySelector('#dialogue-text');
+const dialogueLog = document.querySelector('#dialogue-log');
 const turnIndicator = document.querySelector('#turn-indicator');
 const enemyHpValue = document.querySelector('#enemy-hp-value');
 const enemyHpBar = document.querySelector('#enemy-hp-bar');
@@ -36,6 +45,8 @@ let player = null;
 let enemy = null;
 let combatState = COMBAT_STATES.PLAYER_TURN;
 let isDefending = false;
+const dialogueHistory = [];
+const maxVisibleMessages = 3;
 
 function showScreen(screenToShow) {
 	[menuScreen, classScreen, gameScreen].forEach((screen) => {
@@ -66,7 +77,25 @@ function populateHud() {
 }
 
 function setDialogue(message) {
-	dialogueText.textContent = message;
+	const removedMessage = dialogueHistory.length >= maxVisibleMessages ? dialogueHistory.shift() : null;
+	dialogueHistory.push(message);
+	renderDialogueLog(removedMessage);
+}
+
+function renderDialogueLog(removedMessage = null) {
+	dialogueLog.innerHTML = dialogueHistory.map((message, index) => {
+		const age = dialogueHistory.length - index - 1;
+		const ageClass = age === 0 ? 'log-message-new' : age === dialogueHistory.length - 1 ? 'log-message-oldest' : 'log-message-middle';
+		return `<p class="log-message ${ageClass}">${message}</p>`;
+	}).join('');
+	if (!removedMessage) return;
+
+	const exitingMessage = document.createElement('p');
+	exitingMessage.className = 'log-message log-message-exiting';
+	exitingMessage.textContent = removedMessage;
+	dialogueLog.appendChild(exitingMessage);
+	window.requestAnimationFrame(() => exitingMessage.classList.add('is-evaporating'));
+	window.setTimeout(() => exitingMessage.remove(), 650);
 }
 
 function setCombatState(nextState) {
@@ -90,14 +119,53 @@ function randomDamage(attackerStrength, targetDefense) {
 	return Math.max(1, attackerStrength - targetDefense + variance);
 }
 
+function calculateCriticalChance(attacker) {
+	const luck = attacker.stats ? attacker.stats.SORTE : attacker.luck || 0;
+	return Math.min(combatConfig.criticalMaxChance, combatConfig.criticalBaseChance + luck * combatConfig.criticalLuckFactor);
+}
+
+function isCritical(attacker) {
+	return Math.random() < calculateCriticalChance(attacker);
+}
+
+function calculateEvasionChance(defender) {
+	const agility = defender.stats ? defender.stats.AGILIDADE : defender.agility || 0;
+	return Math.min(combatConfig.evasionMaxChance, combatConfig.evasionBaseChance + agility * combatConfig.evasionAgilityFactor);
+}
+
+function evadesAttack(defender) {
+	return Math.random() < calculateEvasionChance(defender);
+}
+
+function determineInitiative(playerData, enemyData) {
+	const agilityDifference = playerData.stats.AGILIDADE - enemyData.agility;
+	const playerChance = Math.max(0.5 - combatConfig.initiativeMaxShift, Math.min(0.5 + combatConfig.initiativeMaxShift, 0.5 + agilityDifference * combatConfig.initiativeAgilityFactor));
+	return Math.random() < playerChance;
+}
+
+function calculateAttack(attacker, defenderDefense) {
+	const critical = isCritical(attacker);
+	const normalDamage = randomDamage(attacker.strength || attacker.stats.FORCA, defenderDefense);
+	return { critical, damage: critical ? Math.max(normalDamage + 1, Math.floor(normalDamage * combatConfig.criticalMultiplier)) : normalDamage };
+}
+
 function resetCombat() {
 	enemy = { ...combatConfig.enemy, currentHp: combatConfig.enemy.maxHp };
 	isDefending = false;
 	updateHpDisplays();
-	setCombatState(COMBAT_STATES.PLAYER_TURN);
+	const playerStarts = determineInitiative(player, enemy);
+	setCombatState(playerStarts ? COMBAT_STATES.PLAYER_TURN : COMBAT_STATES.ENEMY_TURN);
 	setDialogue('Um Goblin apareceu!');
 	window.setTimeout(() => {
-		if (combatState === COMBAT_STATES.PLAYER_TURN) setDialogue('Seu turno.');
+		if (combatState === COMBAT_STATES.PLAYER_TURN) {
+			setDialogue(`${player.name} foi mais rapido!`);
+			window.setTimeout(() => setDialogue('Seu turno.'), combatConfig.actionDelay);
+			return;
+		}
+		if (combatState === COMBAT_STATES.ENEMY_TURN) {
+			setDialogue(`${enemy.name} tomou a iniciativa!`);
+			window.setTimeout(enemyTurn, combatConfig.actionDelay);
+		}
 	}, combatConfig.actionDelay);
 }
 
@@ -111,40 +179,83 @@ function enemyTurn() {
 	setDialogue(`${enemy.name} atacou!`);
 	window.setTimeout(() => {
 		if (combatState !== COMBAT_STATES.ENEMY_TURN) return;
-		let damage = randomDamage(enemy.strength, player.stats.DEFESA);
+		if (evadesAttack(player)) {
+			setDialogue(`Voce desviou do ataque do ${enemy.name}!`);
+			window.setTimeout(() => finishEnemyTurn(), combatConfig.actionDelay);
+			return;
+		}
+		const attackResult = calculateAttack(enemy, player.stats.DEFESA);
+		let damage = attackResult.damage;
 		if (isDefending) {
 			damage = Math.max(1, Math.floor(damage * combatConfig.defenseMultiplier));
 			setDialogue('Voce bloqueou parte do ataque!');
 			isDefending = false;
-			window.setTimeout(() => applyEnemyDamage(damage), combatConfig.actionDelay);
+			window.setTimeout(() => applyEnemyDamage(damage, attackResult.critical), combatConfig.actionDelay);
 			return;
 		}
-		applyEnemyDamage(damage);
+		applyEnemyDamage(damage, attackResult.critical);
 	}, combatConfig.actionDelay);
 }
 
-function applyEnemyDamage(damage) {
+function finishEnemyTurn() {
+	if (player.currentHp <= 0 || enemy.currentHp <= 0) return;
+	setCombatState(COMBAT_STATES.PLAYER_TURN);
+	setDialogue('Seu turno.');
+}
+
+function applyEnemyDamage(damage, critical) {
 	player.currentHp = Math.max(0, player.currentHp - damage);
 	updateHpDisplays();
+	if (critical) setDialogue('ACERTO CRITICO!');
+	else setDialogue(`${player.name} sofreu ${damage} de dano.`);
 	window.setTimeout(() => {
 		if (player.currentHp <= 0) {
 			finishCombat(COMBAT_STATES.DEFEAT, 'Voce foi derrotado...');
 			return;
 		}
-		setCombatState(COMBAT_STATES.PLAYER_TURN);
-		setDialogue('Seu turno.');
+		if (critical) {
+			setDialogue(`${enemy.name} causou ${damage} de dano!`);
+			window.setTimeout(finishEnemyTurn, combatConfig.actionDelay);
+			return;
+		}
+		finishEnemyTurn();
 	}, combatConfig.actionDelay);
-	setDialogue(`${player.name} sofreu ${damage} de dano.`);
 }
 
 function attack() {
 	if (combatState !== COMBAT_STATES.PLAYER_TURN) return;
-	const damage = randomDamage(player.stats.FORCA, enemy.defense);
+	if (evadesAttack(enemy)) {
+		setCombatState(COMBAT_STATES.ENEMY_TURN);
+		setDialogue(`${player.name} atacou!`);
+		window.setTimeout(() => {
+			if (combatState !== COMBAT_STATES.ENEMY_TURN) return;
+			setDialogue(`${enemy.name} desviou do ataque!`);
+			window.setTimeout(enemyTurn, combatConfig.actionDelay);
+		}, combatConfig.actionDelay);
+		return;
+	}
+	const attackResult = calculateAttack(player, enemy.defense);
+	const damage = attackResult.damage;
 	setCombatState(COMBAT_STATES.ENEMY_TURN);
 	enemy.currentHp = Math.max(0, enemy.currentHp - damage);
 	updateHpDisplays();
 	setDialogue(`${player.name} atacou o ${enemy.name}!`);
 	window.setTimeout(() => {
+		if (attackResult.critical) {
+			setDialogue('ACERTO CRITICO!');
+			window.setTimeout(() => {
+				setDialogue(`${player.name} causou ${damage} de dano!`);
+				if (enemy.currentHp <= 0) {
+					window.setTimeout(() => {
+						finishCombat(COMBAT_STATES.VICTORY, `${enemy.name} foi derrotado!`);
+						window.setTimeout(() => setDialogue('Voce venceu a batalha!'), combatConfig.actionDelay);
+					}, combatConfig.actionDelay);
+					return;
+				}
+				window.setTimeout(enemyTurn, combatConfig.actionDelay);
+			}, combatConfig.actionDelay);
+			return;
+		}
 		if (enemy.currentHp <= 0) {
 			finishCombat(COMBAT_STATES.VICTORY, `${enemy.name} foi derrotado!`);
 			window.setTimeout(() => setDialogue('Voce venceu a batalha!'), combatConfig.actionDelay);
