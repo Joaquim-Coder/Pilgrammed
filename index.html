@@ -79,15 +79,15 @@
 				</aside>
 
 				<section class="battle-section">
-					<div class="battle-heading"><span class="location-tag">✦ FLORESTA DE VELMORA</span><span class="turn-tag">AGUARDANDO TURNO</span></div>
+					<div class="battle-heading"><span class="location-tag">✦ FLORESTA DE VELMORA</span><span id="turn-indicator" class="turn-tag">AGUARDANDO TURNO</span></div>
 					<div class="battlefield panel">
 						<div class="mist mist-one"></div><div class="mist mist-two"></div>
-						<div class="enemy-info"><span class="enemy-icon">☠</span><div><h2>GOBLIN</h2><p>NIVEL 1</p></div><div class="enemy-hp"><span>HP</span><b>50 / 50</b><div class="bar"><span class="bar-fill enemy-fill" style="width:100%"></span></div></div></div>
+						<div class="enemy-info"><span class="enemy-icon">☠</span><div><h2>GOBLIN</h2><p>NIVEL 1</p></div><div class="enemy-hp"><span>HP</span><b id="enemy-hp-value">50 / 50</b><div class="bar"><span id="enemy-hp-bar" class="bar-fill enemy-fill" style="width:100%"></span></div></div></div>
 						<div class="combatants"><div class="ground-shadow enemy-ground"></div><div class="enemy-figure"><span>♟</span></div><div class="ground-shadow player-ground"></div><div class="player-figure"><span>A</span></div></div>
 						<div class="battle-caption">UM INIMIGO SE APROXIMA</div>
 					</div>
-					<div class="battle-bottom">
-						<div class="actions-panel panel"><div class="actions-heading"><span>ACOES</span><small>ESCOLHA SEU MOVIMENTO</small></div><div class="actions-grid"><button class="action-button attack" type="button"><span>⚔</span> ATACAR</button><button class="action-button" type="button"><span>✧</span> HABILIDADES</button><button class="action-button" type="button"><span>▣</span> ITENS</button><button class="action-button" type="button"><span>◈</span> DEFENDER</button><button class="action-button escape" type="button"><span>↗</span> FUGIR</button></div></div>
+						<div class="battle-bottom">
+						<div class="actions-panel panel"><div class="actions-heading"><span>ACOES</span><small>ESCOLHA SEU MOVIMENTO</small></div><div class="actions-grid"><button id="attack-button" class="action-button attack" type="button"><span>⚔</span> ATACAR</button><button id="skills-button" class="action-button" type="button"><span>✧</span> HABILIDADES</button><button id="items-button" class="action-button" type="button"><span>▣</span> ITENS</button><button id="defend-button" class="action-button" type="button"><span>◈</span> DEFENDER</button><button id="escape-button" class="action-button escape" type="button"><span>↗</span> FUGIR</button></div></div>
 						<div class="dialogue-box"><span class="dialogue-ornament">❯</span><p id="dialogue-text">Um Goblin apareceu!</p><span class="dialogue-caret">▼</span></div>
 					</div>
 				</section>
