@@ -466,8 +466,8 @@
 }.class-emblem  {
      display: grid;
      place-items: center;
-     width: 57px;
-     height: 57px;
+     width: 60px;
+     height: 60px;
      margin-bottom: 18px;
      border: 1px solid var(--muted-gold);
      color: var(--gold-bright);
@@ -476,6 +476,13 @@
      
 }.class-emblem::first-letter  {
      transform: rotate(-45deg);
+     
+}.class-emblem img  {
+     width: 60px;
+     height: 60px;
+     object-fit: contain;
+     transform: rotate(-45deg);
+     pointer-events: none;
      
 }.warrior-emblem  {
      color: #d57664;
@@ -1005,9 +1012,15 @@
      min-height: 470px;
      
 }.race-grid  {
-     grid-template-columns: repeat(4, minmax(210px, 1fr));
+     display: flex;
+     flex-wrap: wrap;
+     justify-content: center;
+     
      max-width: 1120px;
      margin-inline: auto;
+     
+}.race-card  {
+     flex: 0 0 calc((100% - 66px) / 4);
      
 }.race-ability  {
      min-height: 14px;
@@ -1060,7 +1073,8 @@
     } 
 }@media (max-width: 900px)  {
      .race-grid  {
-         grid-template-columns: repeat(2, minmax(210px, 1fr));
+           display: grid;
+           grid-template-columns: repeat(2, minmax(210px, 1fr));
          
     } 
 }@media (max-width: 650px)  {

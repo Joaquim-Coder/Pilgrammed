@@ -208,14 +208,15 @@ function saveCharacter() {
 function loadSavedCharacter() {
 	try {
 		const saved = JSON.parse(localStorage.getItem('pilgrammed-character'));
-		if (!saved || !classData[saved.class] || !raceData[saved.race]) return false;
-		selectedClass = saved.class;
-		selectedRace = saved.race;
+		if (!saved) return false;
+		selectedClass = classData[saved.class] ? saved.class : null;
+		selectedRace = raceData[saved.race] ? saved.race : null;
 		if (saved.inventory) {
 			inventory.items = Array.isArray(saved.inventory.items) ? saved.inventory.items : [];
 			inventory.spells = Array.isArray(saved.inventory.spells) ? saved.inventory.spells : [];
 			inventory.gold = Number(saved.inventory.gold) || 0;
 		}
+		if (!selectedClass || !selectedRace) return false;
 		populateHud();
 		player.xp = Number(saved.xp) || 0;
 		saveCharacter();
@@ -224,6 +225,20 @@ function loadSavedCharacter() {
 		localStorage.removeItem('pilgrammed-character');
 		return false;
 	}
+}
+
+function restoreSelectionCards() {
+	const selectedClassCard = [...classCards].find((card) => card.dataset.class === selectedClass);
+	const selectedRaceCard = [...raceCards].find((card) => card.dataset.race === selectedRace);
+	if (selectedClassCard) selectClass(selectedClassCard);
+	if (selectedRaceCard) selectRace(selectedRaceCard);
+}
+
+function startBattle() {
+	if (!classData[selectedClass] || !raceData[selectedRace]) return false;
+	showScreen(gameScreen);
+	resetCombat();
+	return true;
 }
 
 function populateHud() {
@@ -656,11 +671,15 @@ async function escape() {
 }
 
 playButton.addEventListener('click', () => {
-	if (loadSavedCharacter()) {
-		showScreen(gameScreen);
-		resetCombat();
+	/*if (loadSavedCharacter()) {
+		startBattle();
 		return;
 	}
+	restoreSelectionCards();
+	if (classData[selectedClass]) {
+		showScreen(raceScreen);
+		return;
+	}*/
 	showScreen(classScreen);
 });
 classCards.forEach((card) => {
@@ -681,10 +700,9 @@ raceCards.forEach((card) => {
 	});
 });
 confirmRaceButton.addEventListener('click', () => {
-	if (!selectedClass || !selectedRace) return;
+	if (!classData[selectedClass] || !raceData[selectedRace]) return;
 	populateHud();
-	showScreen(gameScreen);
-	resetCombat();
+	startBattle();
 });
 
 attackButton.addEventListener('click', attack);
