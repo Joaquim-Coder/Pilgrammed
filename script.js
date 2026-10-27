@@ -1,16 +1,36 @@
 const classData = {
 	warrior: {
 		name: 'AELRIC', label: 'GUERREIRO', hp: 120, mana: 40,
-		stats: { FORCA: 12, DEFESA: 10, INTELIGENCIA: 3, AGILIDADE: 5, SORTE: 4 }
+		stats: { FORCA: 12, DEFESA: 10, INTELIGENCIA: 3, AGILIDADE: 5, SORTE: 4 }, weaponClass: 'warrior'
 	},
 	mage: {
 		name: 'LYSANDRA', label: 'MAGO', hp: 70, mana: 120,
-		stats: { FORCA: 3, DEFESA: 4, INTELIGENCIA: 14, AGILIDADE: 6, SORTE: 5 }
+		stats: { FORCA: 3, DEFESA: 4, INTELIGENCIA: 14, AGILIDADE: 6, SORTE: 5 }, weaponClass: 'mage'
 	},
 	archer: {
 		name: 'ELIRA', label: 'ARQUEIRO', hp: 90, mana: 70,
-		stats: { FORCA: 7, DEFESA: 6, INTELIGENCIA: 5, AGILIDADE: 13, SORTE: 8 }
+		stats: { FORCA: 7, DEFESA: 6, INTELIGENCIA: 5, AGILIDADE: 13, SORTE: 8 }, weaponClass: 'archer'
+	},
+	paladin: {
+		name: 'SERAPHINE', label: 'PALADINO', hp: 110, mana: 85,
+		stats: { FORCA: 10, DEFESA: 12, INTELIGENCIA: 8, AGILIDADE: 5, SORTE: 5 }, weaponClass: 'paladin'
+	},
+	thief: {
+		name: 'NYX', label: 'LADRÃO', hp: 85, mana: 55,
+		stats: { FORCA: 7, DEFESA: 5, INTELIGENCIA: 6, AGILIDADE: 14, SORTE: 10 }, weaponClass: 'thief'
 	}
+};
+
+const classWeapons = {
+	warrior: ['Espada Longa', 'Espada de Duas Mãos', 'Machado de Batalha', 'Machado de Duas Mãos', 'Martelo de Guerra', 'Maça', 'Mangual', 'Lança', 'Alabarda', 'Foice de Guerra', 'Montante', 'Espada e Escudo'],
+	mage: ['Cajado Mágico', 'Cajado de Batalha', 'Varinha', 'Grimório', 'Orbe Mágico', 'Cetro', 'Adaga Mágica', 'Tomo Arcano', 'Cajado de Fogo', 'Cajado de Gelo', 'Cajado de Raios', 'Cajado das Sombras', 'Cajado Sagrado'],
+	archer: ['Arco Curto', 'Arco Longo', 'Arco Composto', 'Arco de Caça', 'Arco de Guerra', 'Besta', 'Besta Leve', 'Besta Pesada', 'Besta de Repetição', 'Arco Mágico', 'Arco de Fogo', 'Arco de Gelo', 'Arco Sombrio', 'Arco Sagrado', 'Facas de Arremesso', 'Dardos'],
+	paladin: ['Espada Grande de Duas Mãos', 'Espada e escudo', 'Maça', 'Martelo', 'Lança'],
+	thief: ['Adagas', 'Facas', 'Espadas curtas', 'Bestas', 'Armas leves de arremesso']
+};
+
+const weaponConfig = {
+	nerfMultiplier: 0.7
 };
 
 const raceData = {
@@ -113,6 +133,10 @@ const gameScreen = document.querySelector('#screen-game');
 const playButton = document.querySelector('#play-button');
 const confirmButton = document.querySelector('#confirm-button');
 const classCards = document.querySelectorAll('#class-grid .class-card');
+const weaponButtons = document.querySelectorAll('.weapon-list-button');
+const weaponDialog = document.querySelector('#weapon-dialog');
+const weaponDialogList = document.querySelector('#weapon-dialog-list');
+const weaponDialogClose = document.querySelector('#weapon-dialog-close');
 const raceCards = document.querySelectorAll('.race-card');
 const confirmRaceButton = document.querySelector('#confirm-race-button');
 const actionButtons = document.querySelectorAll('.action-button');
@@ -134,6 +158,7 @@ const playerManaBar = document.querySelector('#mana-bar');
 const playerXpBar = document.querySelector('#xp-bar');
 let selectedClass = null;
 let selectedRace = null;
+let weaponDialogTrigger = null;
 let player = null;
 let enemy = null;
 let combatState = COMBAT_STATES.PLAYER_TURN;
@@ -164,6 +189,12 @@ function selectClass(card) {
 	confirmButton.disabled = false;
 }
 
+function closeWeaponDialog() {
+	weaponDialog.classList.add('is-hidden');
+	weaponDialogTrigger?.focus();
+	weaponDialogTrigger = null;
+}
+
 function selectRace(card) {
 	raceCards.forEach((item) => {
 		const isSelected = item === card;
@@ -189,6 +220,7 @@ function createCharacter(classKey, raceKey) {
 		ability: raceChoice.ability,
 		currentHp: classChoice.hp + raceChoice.hp,
 		currentMana: classChoice.mana + raceChoice.mana,
+		weapon: { name: `${classChoice.label} inicial`, class: classChoice.weaponClass },
 		isAvivado: false,
 		speedMultiplier: 1,
 		damageMultiplier: 1
@@ -308,6 +340,17 @@ function grantStartingItems() {
 	if (player.race === 'elf' && !inventory.items.includes('GRIMORIO')) {
 		inventory.items.push('GRIMORIO');
 	}
+}
+
+function equipWeapon(weapon) {
+	if (!player || !weapon || typeof weapon.class !== 'string') return false;
+	player.weapon = weapon;
+	return true;
+}
+
+function getWeaponDamageMultiplier(attacker) {
+	if (attacker !== player || !attacker.weapon) return 1;
+	return attacker.weapon.class === classData[selectedClass].weaponClass ? 1 : weaponConfig.nerfMultiplier;
 }
 
 function learnSpell(spell, baseCost) {
@@ -481,6 +524,7 @@ function calculateAttack(attacker, defenderDefense) {
 		if (player.race === 'demon' && worldState.timeOfDay === 'night') normalDamage *= passive.nightDamageMultiplier;
 		if (player.race === 'angel' && worldState.timeOfDay === 'day') normalDamage *= passive.dayDamageMultiplier;
 		normalDamage *= player.damageMultiplier || 1;
+		normalDamage *= getWeaponDamageMultiplier(attacker);
 	}
 	return { critical, damage: critical ? Math.max(normalDamage + 1, Math.floor(normalDamage * combatConfig.criticalMultiplier)) : Math.floor(normalDamage) };
 }
@@ -671,26 +715,54 @@ async function escape() {
 }
 
 playButton.addEventListener('click', () => {
-	/*if (loadSavedCharacter()) {
-		startBattle();
-		return;
-	}
-	restoreSelectionCards();
-	if (classData[selectedClass]) {
-		showScreen(raceScreen);
-		return;
-	}*/
-	showScreen(classScreen);
+	selectedClass = null;
+	selectedRace = null;
+	classCards.forEach((card) => {
+		card.classList.remove('is-selected');
+		card.setAttribute('aria-pressed', 'false');
+	});
+	raceCards.forEach((card) => {
+		card.classList.remove('is-selected');
+		card.setAttribute('aria-pressed', 'false');
+	});
+	confirmButton.disabled = true;
+	confirmRaceButton.disabled = true;
+	showScreen(raceScreen);
 });
 classCards.forEach((card) => {
 	card.addEventListener('click', () => selectClass(card));
 	card.addEventListener('keydown', (event) => {
+		if (event.target !== card) return;
 		if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectClass(card); }
 	});
 });
+weaponButtons.forEach((button) => {
+	button.addEventListener('click', (event) => {
+		event.stopPropagation();
+		const weapons = classWeapons[button.dataset.weaponsFor];
+		if (!weapons) return;
+		weaponDialogTrigger = button;
+		weaponDialogList.replaceChildren(...weapons.map((weapon) => {
+			const item = document.createElement('li');
+			item.textContent = weapon;
+			return item;
+		}));
+		weaponDialog.classList.remove('is-hidden');
+		weaponDialogClose.focus();
+	});
+});
+weaponDialogClose.addEventListener('click', closeWeaponDialog);
+weaponDialog.addEventListener('click', (event) => {
+	if (event.target === weaponDialog.querySelector('.weapon-dialog-backdrop')) closeWeaponDialog();
+});
+document.addEventListener('keydown', (event) => {
+	if (event.key === 'Escape' && !weaponDialog.classList.contains('is-hidden')) closeWeaponDialog();
+});
 confirmButton.addEventListener('click', () => {
 	if (!selectedClass) return;
-	showScreen(raceScreen);
+	if (!selectedRace) return;
+	populateHud();
+	startBattle();
 });
 
 raceCards.forEach((card) => {
@@ -700,9 +772,8 @@ raceCards.forEach((card) => {
 	});
 });
 confirmRaceButton.addEventListener('click', () => {
-	if (!classData[selectedClass] || !raceData[selectedRace]) return;
-	populateHud();
-	startBattle();
+	if (!raceData[selectedRace]) return;
+	showScreen(classScreen);
 });
 
 attackButton.addEventListener('click', attack);
