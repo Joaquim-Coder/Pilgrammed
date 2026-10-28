@@ -1,106 +1,543 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="theme-color" content="#0b0e13">
-	<title>Pilgrammed | RPG</title>
-	<link rel="stylesheet" href="style.css">
-</head>
-<body>
-	<main id="app">
-		<section id="screen-menu" class="screen screen-menu" aria-labelledby="game-title">
-			<div class="menu-grain" aria-hidden="true"></div>
-			<div class="menu-rune menu-rune-left" aria-hidden="true">✦</div>
-			<div class="menu-rune menu-rune-right" aria-hidden="true">✧</div>
-			<div class="menu-content">
-				<p class="eyebrow">AS CRONICAS DO REINO PARTIDO</p>
-				<h1 id="game-title">PILGRAMMED</h1>
-				<div class="title-rule"><span></span><i>✦</i><span></span></div>
-				<p class="tagline">Seu destino sera escrito em batalha.</p>
-				<button id="play-button" class="button button-primary" type="button">JOGAR <span>↗</span></button>
-			</div>
-			<p class="menu-footer">UMA JORNADA DE FERRO, MAGIA E HONRA</p>
-		</section>
-
-		<section id="screen-class" class="screen class-screen is-hidden" aria-labelledby="class-title">
-			<header class="selection-header">
-				<p class="eyebrow">PRIMEIRO PASSO DA JORNADA</p>
-				<h2 id="class-title">ESCOLHA SUA CLASSE</h2>
-				<p class="section-intro">Todo heroi carrega uma arma. Escolha o que carregara seu destino.</p>
-			</header>
-			<div id="class-grid" class="class-grid">
-				<article class="class-card" data-class="warrior" tabindex="0" role="button" aria-pressed="false">
-					<div class="class-emblem warrior-emblem">⚔</div>
-					<div class="class-card-heading"><h3>GUERREIRO</h3><span>01</span></div>
-					<p class="class-description">Combatente resistente especializado em combate fisico.</p>
-					<div class="primary-stats"><div><small>VIDA</small><strong>120</strong></div><div><small>MANA</small><strong>40</strong></div></div>
-					<dl class="stat-list"><div><dt>FORCA</dt><dd>12</dd></div><div><dt>DEFESA</dt><dd>10</dd></div><div><dt>INTELIGENCIA</dt><dd>3</dd></div><div><dt>AGILIDADE</dt><dd>5</dd></div><div><dt>SORTE</dt><dd>4</dd></div></dl>
-					<div class="card-select-label">SELECIONAR <span>+</span></div>
-				</article>
-				<article class="class-card" data-class="mage" tabindex="0" role="button" aria-pressed="false">
-					<div class="class-emblem mage-emblem">✧</div>
-					<div class="class-card-heading"><h3>MAGO</h3><span>02</span></div>
-					<p class="class-description">Especialista em magia, com grande quantidade de mana e inteligencia.</p>
-					<div class="primary-stats"><div><small>VIDA</small><strong>70</strong></div><div><small>MANA</small><strong>120</strong></div></div>
-					<dl class="stat-list"><div><dt>FORCA</dt><dd>3</dd></div><div><dt>DEFESA</dt><dd>4</dd></div><div><dt>INTELIGENCIA</dt><dd>14</dd></div><div><dt>AGILIDADE</dt><dd>6</dd></div><div><dt>SORTE</dt><dd>5</dd></div></dl>
-					<div class="card-select-label">SELECIONAR <span>+</span></div>
-				</article>
-				<article class="class-card" data-class="archer" tabindex="0" role="button" aria-pressed="false">
-					<div class="class-emblem archer-emblem">➶</div>
-					<div class="class-card-heading"><h3>ARQUEIRO</h3><span>03</span></div>
-					<p class="class-description">Combatente rapido e preciso, especializado em ataques a distancia.</p>
-					<div class="primary-stats"><div><small>VIDA</small><strong>90</strong></div><div><small>MANA</small><strong>70</strong></div></div>
-					<dl class="stat-list"><div><dt>FORCA</dt><dd>7</dd></div><div><dt>DEFESA</dt><dd>6</dd></div><div><dt>INTELIGENCIA</dt><dd>5</dd></div><div><dt>AGILIDADE</dt><dd>13</dd></div><div><dt>SORTE</dt><dd>8</dd></div></dl>
-					<div class="card-select-label">SELECIONAR <span>+</span></div>
-				</article>
-			</div>
-			<button id="confirm-button" class="button button-primary confirm-button" type="button" disabled>CONFIRMAR CLASSE <span>↗</span></button>
-		</section>
-
-		<section id="screen-game" class="screen game-screen is-hidden" aria-label="Interface principal do jogo">
-			<header class="hud-header panel">
-				<div class="brand-mark"><span>✦</span> PILGRAMMED</div>
-				<div class="character-identity"><div class="avatar-mark">A</div><div><p id="character-name">AELRIC</p><span id="character-class">GUERREIRO</span></div></div>
-				<div class="level-badge"><small>NIVEL</small><strong>1</strong></div>
-				<div class="resource-bars">
-					<div class="resource-row"><div class="resource-label hp-label"><span>HP</span><b id="hp-value">120 / 120</b></div><div class="bar"><span id="hp-bar" class="bar-fill hp-fill" style="width:100%"></span></div></div>
-					<div class="resource-row"><div class="resource-label mana-label"><span>MANA</span><b id="mana-value">40 / 40</b></div><div class="bar"><span id="mana-bar" class="bar-fill mana-fill" style="width:33%"></span></div></div>
-					<div class="resource-row"><div class="resource-label xp-label"><span>XP</span><b id="xp-value">0 / 100</b></div><div class="bar"><span id="xp-bar" class="bar-fill xp-fill" style="width:0%"></span></div></div>
-				</div>
-			</header>
-
-			<div class="game-layout">
-				<aside class="attributes-panel panel">
-					<div class="panel-heading"><span class="panel-kicker">FICHA DO VIAJANTE</span><h2>ATRIBUTOS</h2></div>
-					<div class="available-points"><span>PONTOS DISPONIVEIS</span><strong>0</strong></div>
-					<dl id="hud-stats" class="hud-stats"></dl>
-					<div class="panel-seal">✦</div>
-				</aside>
-
-				<section class="battle-section">
-					<div class="battle-heading"><span class="location-tag">✦ FLORESTA DE VELMORA</span><span id="turn-indicator" class="turn-tag">AGUARDANDO TURNO</span></div>
-					<div class="battlefield panel">
-						<div class="mist mist-one"></div><div class="mist mist-two"></div>
-						<div class="enemy-info"><span class="enemy-icon">☠</span><div><h2>GOBLIN</h2><p>NIVEL 1</p></div><div class="enemy-hp"><span>HP</span><b id="enemy-hp-value">50 / 50</b><div class="bar"><span id="enemy-hp-bar" class="bar-fill enemy-fill" style="width:100%"></span></div></div></div>
-						<div class="combatants"><div class="ground-shadow enemy-ground"></div><div class="enemy-figure"><span>♟</span></div><div class="ground-shadow player-ground"></div><div class="player-figure"><span>A</span></div></div>
-						<div id="timing-game" class="combat-minigame timing-game is-hidden" role="dialog" aria-label="Desafio de timing do ataque">
-							<div class="minigame-kicker">PRECISAO DE ATAQUE</div>
-							<h2>ENCONTRE O MOMENTO CERTO</h2>
-							<div id="timing-track" class="timing-track"><span class="timing-zone timing-weak-left"></span><span class="timing-zone timing-normal-left"></span><span class="timing-zone timing-good-left"></span><span class="timing-zone timing-great-left"></span><span class="timing-zone timing-perfect"></span><span class="timing-zone timing-great-right"></span><span class="timing-zone timing-good-right"></span><span class="timing-zone timing-normal-right"></span><span class="timing-zone timing-weak-right"></span><span id="timing-marker" class="timing-marker"></span></div>
-							<p id="timing-feedback" class="timing-feedback">AGUARDE O MARCADOR</p>
-							<small>ESPACO OU CLIQUE PARA GOLPEAR</small>
-						</div>
-						<div class="battle-caption">UM INIMIGO SE APROXIMA</div>
-					</div>
-						<div class="battle-bottom">
-						<div class="actions-panel panel"><div class="actions-heading"><span>ACOES</span><small>ESCOLHA SEU MOVIMENTO</small></div><div class="actions-grid"><button id="attack-button" class="action-button attack" type="button"><span>⚔</span> ATACAR</button><button id="skills-button" class="action-button" type="button"><span>✧</span> HABILIDADES</button><button id="items-button" class="action-button" type="button"><span>▣</span> ITENS</button><button id="defend-button" class="action-button" type="button"><span>◈</span> DEFENDER</button><button id="escape-button" class="action-button escape" type="button"><span>↗</span> FUGIR</button></div></div>
-						<div class="dialogue-box"><span class="dialogue-ornament">❯</span><div id="dialogue-log" class="dialogue-log" aria-live="polite"></div><span class="dialogue-caret">▼</span></div>
-					</div>
-				</section>
-			</div>
-		</section>
-	</main>
-	<script src="script.js"></script>
-</body>
-</html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="theme-color" content="#0b0e13">
+        <title>Pilgrammed | RPG</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <main id="app">
+            <section id="screen-menu" class="screen screen-menu" aria-labelledby="game-title">
+                <div class="menu-grain" aria-hidden="true">
+                </div>
+                <div class="menu-rune menu-rune-left" aria-hidden="true">✦</div>
+                <div class="menu-rune menu-rune-right" aria-hidden="true">✧</div>
+                <div class="menu-content">
+                    <p class="eyebrow">AS CRONICAS DO REINO PARTIDO</p>
+                    <h1 id="game-title">PILGRAMMED</h1>
+                    <div class="title-rule">
+                        <span>
+                        </span>
+                        <i>✦</i>
+                        <span>
+                        </span>
+                    </div>
+                    <p class="tagline">Seu destino sera escrito em batalha.</p>
+                    <button id="play-button" class="button button-primary" type="button">JOGAR <span>↗</span>
+                </button>
+            </div>
+            <p class="menu-footer">UMA JORNADA DE FERRO, MAGIA E HONRA</p>
+        </section>
+        <section id="screen-class" class="screen class-screen is-hidden" aria-labelledby="class-title">
+            <header class="selection-header">
+                <p class="eyebrow">SEGUNDO PASSO DA JORNADA</p>
+                <h2 id="class-title">ESCOLHA SUA CLASSE</h2>
+                <p class="section-intro">Todo heroi carrega uma arma. Escolha o que carregara seu destino.</p>
+                <p class="weapon-warning">Armas de outras classes são nerfadas. Para obter o melhor desempenho, utilize armas compatíveis com sua classe.</p>
+            </header>
+            <div id="class-grid" class="class-grid">
+                <article class="class-card" data-class="warrior" tabindex="0" role="button" aria-pressed="false">
+                    <div class="class-emblem warrior-emblem"><img src="iconeGuerreiro.png" alt="Ícone do Guerreiro"></div>
+                    <div class="class-card-heading">
+                        <h3>GUERREIRO</h3>
+                        <span>01</span>
+                    </div>
+                    <p class="class-description">Combatente resistente que domina a linha de frente com força e disciplina.</p>
+                    <dl class="class-traits">
+                        <div><dt>ESTILO</dt><dd>Força / Defesa</dd></div>
+                        <div><dt>FUNÇÃO</dt><dd>Linha de frente</dd></div>
+                        <div><dt>ARMAS</dt><dd>Espadas, machados e martelos</dd></div>
+                    </dl>
+                    <button class="weapon-list-button" type="button" data-weapons-for="warrior" aria-haspopup="dialog" aria-controls="weapon-dialog">Ver armas</button>
+                    <div class="card-select-label">SELECIONAR <span>+</span>
+                </div>
+            </article>
+            <article class="class-card" data-class="mage" tabindex="0" role="button" aria-pressed="false">
+                <div class="class-emblem mage-emblem"><img src="iconeMago.png" alt="Ícone do Mago"></div>
+                <div class="class-card-heading">
+                    <h3>MAGO</h3>
+                    <span>02</span>
+                </div>
+                <p class="class-description">Conjurador arcano que transforma mana em poder elemental e controle.</p>
+                <dl class="class-traits">
+                    <div><dt>ESTILO</dt><dd>Magia / Controle</dd></div>
+                    <div><dt>FUNÇÃO</dt><dd>Dano à distância</dd></div>
+                    <div><dt>ARMAS</dt><dd>Cajados, varinhas e grimórios</dd></div>
+                </dl>
+                <button class="weapon-list-button" type="button" data-weapons-for="mage" aria-haspopup="dialog" aria-controls="weapon-dialog">Ver armas</button>
+                <div class="card-select-label">SELECIONAR <span>+</span>
+            </div>
+        </article>
+        <article class="class-card" data-class="archer" tabindex="0" role="button" aria-pressed="false">
+            <div class="class-emblem archer-emblem"><img src="iconeArqueiro.png" alt="Ícone do Arqueiro"></div>
+            <div class="class-card-heading">
+                <h3>ARQUEIRO</h3>
+                <span>03</span>
+            </div>
+            <p class="class-description">Atirador ágil e preciso, especialista em manter distância e encontrar aberturas.</p>
+            <dl class="class-traits">
+                <div><dt>ESTILO</dt><dd>Precisão / Agilidade</dd></div>
+                <div><dt>FUNÇÃO</dt><dd>Dano à distância</dd></div>
+                <div><dt>ARMAS</dt><dd>Arcos, bestas e dardos</dd></div>
+            </dl>
+            <button class="weapon-list-button" type="button" data-weapons-for="archer" aria-haspopup="dialog" aria-controls="weapon-dialog">Ver armas</button>
+            <div class="card-select-label">SELECIONAR <span>+</span>
+        </div>
+    </article>
+    <article class="class-card" data-class="paladin" tabindex="0" role="button" aria-pressed="false">
+        <div class="class-emblem paladin-emblem"><img src="iconePaladino.png" alt="Ícone do Paladino"></div>
+        <div class="class-card-heading">
+            <h3>PALADINO</h3>
+            <span>04</span>
+        </div>
+        <p class="class-description">Combatente sagrado que combina defesa, força e habilidades de suporte.</p>
+        <dl class="class-traits">
+            <div><dt>ESTILO</dt><dd>Defesa / Suporte</dd></div>
+            <div><dt>FUNÇÃO</dt><dd>Proteção do grupo</dd></div>
+            <div><dt>ARMAS</dt><dd>Espadas, maças e martelos</dd></div>
+        </dl>
+        <button class="weapon-list-button" type="button" data-weapons-for="paladin" aria-haspopup="dialog" aria-controls="weapon-dialog">Ver armas</button>
+        <div class="card-select-label">SELECIONAR <span>+</span></div>
+    </article>
+    <article class="class-card" data-class="thief" tabindex="0" role="button" aria-pressed="false">
+        <div class="class-emblem thief-emblem"><img src="iconeLadrao.png" alt="Ícone do Ladrão"></div>
+        <div class="class-card-heading">
+            <h3>LADRÃO</h3>
+            <span>05</span>
+        </div>
+        <p class="class-description">Especialista em velocidade, furtividade e ataques rápidos e certeiros.</p>
+        <dl class="class-traits">
+            <div><dt>ESTILO</dt><dd>Velocidade / Dano</dd></div>
+            <div><dt>FUNÇÃO</dt><dd>Ataques oportunos</dd></div>
+            <div><dt>ARMAS</dt><dd>Adagas, facas e armas leves</dd></div>
+        </dl>
+        <button class="weapon-list-button" type="button" data-weapons-for="thief" aria-haspopup="dialog" aria-controls="weapon-dialog">Ver armas</button>
+        <div class="card-select-label">SELECIONAR <span>+</span></div>
+    </article>
+</div>
+<div id="weapon-dialog" class="weapon-dialog is-hidden" role="dialog" aria-modal="true" aria-labelledby="weapon-dialog-title">
+    <div class="weapon-dialog-backdrop" aria-hidden="true"></div>
+    <section class="weapon-dialog-panel">
+        <h3 id="weapon-dialog-title">Armas disponíveis</h3>
+        <ul id="weapon-dialog-list" class="weapon-dialog-list"></ul>
+        <button id="weapon-dialog-close" class="weapon-dialog-close" type="button">Fechar</button>
+    </section>
+</div>
+<button id="confirm-button" class="button button-primary confirm-button" type="button" disabled>CONFIRMAR CLASSE <span>↗</span>
+</button>
+</section>
+<section id="screen-race" class="screen class-screen is-hidden" aria-labelledby="race-title">
+    <header class="selection-header">
+        <p class="eyebrow">PRIMEIRO PASSO DA JORNADA</p>
+        <h2 id="race-title">ESCOLHA SUA RAÇA</h2>
+        <p class="section-intro">A origem de um herói define os dons que o acompanharão.</p>
+    </header>
+    <div id="race-grid" class="class-grid race-grid">
+        <article class="class-card race-card" data-race="human" tabindex="0" role="button" aria-pressed="false">
+            <div class="class-emblem"><img src="humano.png" alt="Emblema do Anão"></div>
+            <div class="class-card-heading">
+                <h3>HUMANO</h3>
+            </div>
+            <p class="class-description">Equilibrado e adaptável, com maior ganho de XP e ouro.</p>
+            <div class="primary-stats">
+                <div>
+                    <small>VIDA</small>
+                    <strong>100</strong>
+                </div>
+                <div>
+                    <small>MANA</small>
+                    <strong>80</strong>
+                </div>
+            </div>
+            <dl class="stat-list">
+                <div>
+                    <dt>FORÇA</dt>
+                    <dd>10</dd>
+                </div>
+                <div>
+                    <dt>AGILIDADE</dt>
+                    <dd>10</dd>
+                </div>
+                <div>
+                    <dt>DEFESA</dt>
+                    <dd>5</dd>
+                </div>
+            </dl>
+            <p class="race-ability">PASSIVA: XP E OURO +25%</p>
+            <div class="card-select-label">SELECIONAR <span>+</span>
+        </div>
+    </article>
+    <article class="class-card race-card" data-race="elf" tabindex="0" role="button" aria-pressed="false">
+        <div class="class-emblem"><img src="elfo.png" alt="Emblema do Elfo"></div>
+        <div class="class-card-heading">
+            <h3>ÉLFO</h3>
+        </div>
+        <p class="class-description">Ágil e sábio, começa com um grimório e descontos em magias.</p>
+        <div class="primary-stats">
+            <div>
+                <small>VIDA</small>
+                <strong>80</strong>
+            </div>
+            <div>
+                <small>MANA</small>
+                <strong>150</strong>
+            </div>
+        </div>
+        <dl class="stat-list">
+            <div>
+                <dt>FORÇA</dt>
+                <dd>8</dd>
+            </div>
+            <div>
+                <dt>AGILIDADE</dt>
+                <dd>10</dd>
+            </div>
+            <div>
+                <dt>DEFESA</dt>
+                <dd>3</dd>
+            </div>
+        </dl>
+        <p class="race-ability">PASSIVA: GRIMÓRIO, MAGIAS -20%</p>
+        <div class="card-select-label">SELECIONAR <span>+</span>
+    </div>
+</article>
+<article class="class-card race-card" data-race="orc" tabindex="0" role="button" aria-pressed="false">
+    <div class="class-emblem"><img src="orc.png" alt="Emblema do Orc"></div>
+    <div class="class-card-heading">
+        <h3>ORC</h3>
+    </div>
+    <p class="class-description">Forte e resistente, fica ainda mais defensivo à beira da morte.</p>
+    <div class="primary-stats">
+        <div>
+            <small>VIDA</small>
+            <strong>150</strong>
+        </div>
+        <div>
+            <small>MANA</small>
+            <strong>40</strong>
+        </div>
+    </div>
+    <dl class="stat-list">
+        <div>
+            <dt>FORÇA</dt>
+            <dd>18</dd>
+        </div>
+        <div>
+            <dt>AGILIDADE</dt>
+            <dd>6</dd>
+        </div>
+        <div>
+            <dt>DEFESA</dt>
+            <dd>8</dd>
+        </div>
+    </dl>
+    <p class="race-ability">PASSIVA: DEFESA +25% ABAIXO DE 15% HP</p>
+    <div class="card-select-label">SELECIONAR <span>+</span>
+</div>
+</article>
+<article class="class-card race-card" data-race="dwarf" tabindex="0" role="button" aria-pressed="false">
+    <div class="class-emblem"><img src="anao.png" alt="Emblema do Anão"></div>
+    <div class="class-card-heading">
+        <h3>ANÃO</h3>
+    </div>
+    <p class="class-description">Resistente e habilidoso, economiza em melhorias de armas e equipamentos.</p>
+    <div class="primary-stats">
+        <div>
+            <small>VIDA</small>
+            <strong>110</strong>
+        </div>
+        <div>
+            <small>MANA</small>
+            <strong>90</strong>
+        </div>
+    </div>
+    <dl class="stat-list">
+        <div>
+            <dt>FORÇA</dt>
+            <dd>11</dd>
+        </div>
+        <div>
+            <dt>AGILIDADE</dt>
+            <dd>9</dd>
+        </div>
+        <div>
+            <dt>DEFESA</dt>
+            <dd>7</dd>
+        </div>
+    </dl>
+    <p class="race-ability">PASSIVA: UPGRADES -20%</p>
+    <div class="card-select-label">SELECIONAR <span>+</span>
+</div>
+</article>
+<article class="class-card race-card" data-race="demon" tabindex="0" role="button" aria-pressed="false">
+    <div class="class-emblem"><img src="demonio.png" alt="Emblema do Demônio"></div>
+    <div class="class-card-heading">
+        <h3>DEMONIO</h3>
+    </div>
+    <p class="class-description">Poderoso à noite, capaz de executar inimigos enfraquecidos.</p>
+    <div class="primary-stats">
+        <div>
+            <small>VIDA</small>
+            <strong>120</strong>
+        </div>
+        <div>
+            <small>MANA</small>
+            <strong>100</strong>
+        </div>
+    </div>
+    <dl class="stat-list">
+        <div>
+            <dt>FORÇA</dt>
+            <dd>14</dd>
+        </div>
+        <div>
+            <dt>AGILIDADE</dt>
+            <dd>10</dd>
+        </div>
+        <div>
+            <dt>DEFESA</dt>
+            <dd>5</dd>
+        </div>
+    </dl>
+    <p class="race-ability">PASSIVA: DANO NOTURNO +25%, EXECUÇÃO</p>
+    <div class="card-select-label">SELECIONAR <span>+</span>
+</div>
+</article>
+<article class="class-card race-card" data-race="angel" tabindex="0" role="button" aria-pressed="false">
+    <div class="class-emblem"><img src="anjo.png" alt="Emblema do Anjo"></div>
+    <div class="class-card-heading">
+        <h3>ANJO</h3>
+    </div>
+    <p class="class-description">Divino e ágil, causa mais dano durante o dia.</p>
+    <div class="primary-stats">
+        <div>
+            <small>VIDA</small>
+            <strong>100</strong>
+        </div>
+        <div>
+            <small>MANA</small>
+            <strong>120</strong>
+        </div>
+    </div>
+    <dl class="stat-list">
+        <div>
+            <dt>FORÇA</dt>
+            <dd>13</dd>
+        </div>
+        <div>
+            <dt>AGILIDADE</dt>
+            <dd>12</dd>
+        </div>
+        <div>
+            <dt>DEFESA</dt>
+            <dd>6</dd>
+        </div>
+    </dl>
+    <p class="race-ability">PASSIVA: DANO DIURNO +25%, 2x GANHO DE FÉ</p>
+    <div class="card-select-label">SELECIONAR <span>+</span>
+</div>
+</article>
+<article class="class-card race-card" data-race="halfHuman" tabindex="0" role="button" aria-pressed="false">
+    <div class="class-emblem"><img src="demihumano.png" alt="Emblema do Demi-Humano"></div>
+    <div class="class-card-heading">
+        <h3>DEMI-HUMANO</h3>
+    </div>
+    <p class="class-description">Extremamente ágil, fica mais veloz e poderoso após críticos.</p>
+    <div class="primary-stats">
+        <div>
+            <small>VIDA</small>
+            <strong>100</strong>
+        </div>
+        <div>
+            <small>MANA</small>
+            <strong>80</strong>
+        </div>
+    </div>
+    <dl class="stat-list">
+        <div>
+            <dt>FORÇA</dt>
+            <dd>12</dd>
+        </div>
+        <div>
+            <dt>AGILIDADE</dt>
+            <dd>15</dd>
+        </div>
+        <div>
+            <dt>DEFESA</dt>
+            <dd>6</dd>
+        </div>
+    </dl>
+    <p class="race-ability">PASSIVA: CRÍTICO ATIVA AVIVADO</p>
+    <div class="card-select-label">SELECIONAR <span>+</span>
+</div>
+</article>
+</div>
+<button id="confirm-race-button" class="button button-primary confirm-button" type="button" disabled>CONFIRMAR RAÇA <span>↗</span>
+</button>
+</section>
+<section id="screen-game" class="screen game-screen is-hidden" aria-label="Interface principal do jogo">
+    <header class="hud-header panel">
+        <div class="brand-mark">
+            <span>✦</span> PILGRAMMED</div>
+            <div class="character-identity">
+                <div class="avatar-mark">A</div>
+                <div>
+                    <p id="character-name">AELRIC</p>
+                    <span id="character-class">GUERREIRO</span>
+                    <small id="character-race">HUMANO</small>
+                </div>
+            </div>
+            <div class="level-badge">
+                <small>NIVEL</small>
+                <strong>1</strong>
+            </div>
+            <div class="resource-bars">
+                <div class="resource-row">
+                    <div class="resource-label hp-label">
+                        <span>HP</span>
+                        <b id="hp-value">120 / 120</b>
+                    </div>
+                    <div class="bar">
+                        <span id="hp-bar" class="bar-fill hp-fill" style="width:100%">
+                        </span>
+                    </div>
+                </div>
+                <div class="resource-row">
+                    <div class="resource-label mana-label">
+                        <span>MANA</span>
+                        <b id="mana-value">40 / 40</b>
+                    </div>
+                    <div class="bar">
+                        <span id="mana-bar" class="bar-fill mana-fill" style="width:33%">
+                        </span>
+                    </div>
+                </div>
+                <div class="resource-row">
+                    <div class="resource-label xp-label">
+                        <span>XP</span>
+                        <b id="xp-value">0 / 100</b>
+                    </div>
+                    <div class="bar">
+                        <span id="xp-bar" class="bar-fill xp-fill" style="width:0%">
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="game-layout">
+            <aside class="attributes-panel panel">
+                <div class="panel-heading">
+                    <span class="panel-kicker">FICHA DO VIAJANTE</span>
+                    <h2>ATRIBUTOS</h2>
+                </div>
+                <div class="available-points">
+                    <span>PONTOS DISPONIVEIS</span>
+                    <strong>0</strong>
+                </div>
+                <dl id="hud-stats" class="hud-stats">
+                </dl>
+                <div class="panel-seal">✦</div>
+            </aside>
+            <section class="battle-section">
+                <div class="battle-heading">
+                    <span class="location-tag">✦ FLORESTA DE VELMORA</span>
+                    <span id="turn-indicator" class="turn-tag">AGUARDANDO TURNO</span>
+                </div>
+                <div class="battlefield panel">
+                    <div class="mist mist-one">
+                    </div>
+                    <div class="mist mist-two">
+                    </div>
+                    <div class="enemy-info">
+                        <span class="enemy-icon">☠</span>
+                        <div>
+                            <h2>GOBLIN</h2>
+                            <p>NIVEL 1</p>
+                        </div>
+                        <div class="enemy-hp">
+                            <span>HP</span>
+                            <b id="enemy-hp-value">50 / 50</b>
+                            <div class="bar">
+                                <span id="enemy-hp-bar" class="bar-fill enemy-fill" style="width:100%">
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="combatants">
+                        <div class="ground-shadow enemy-ground">
+                        </div>
+                        <div class="enemy-figure">
+                            <span>♟</span>
+                        </div>
+                        <div class="ground-shadow player-ground">
+                        </div>
+                        <div class="player-figure">
+                            <span>A</span>
+                        </div>
+                    </div>
+                    <div id="timing-game" class="combat-minigame timing-game is-hidden" role="dialog" aria-label="Desafio de timing do ataque">
+                        <div class="minigame-kicker">PRECISAO DE ATAQUE</div>
+                        <h2>ENCONTRE O MOMENTO CERTO</h2>
+                        <div id="timing-track" class="timing-track">
+                            <span class="timing-zone timing-weak-left">
+                            </span>
+                            <span class="timing-zone timing-normal-left">
+                            </span>
+                            <span class="timing-zone timing-good-left">
+                            </span>
+                            <span class="timing-zone timing-great-left">
+                            </span>
+                            <span class="timing-zone timing-perfect">
+                            </span>
+                            <span class="timing-zone timing-great-right">
+                            </span>
+                            <span class="timing-zone timing-good-right">
+                            </span>
+                            <span class="timing-zone timing-normal-right">
+                            </span>
+                            <span class="timing-zone timing-weak-right">
+                            </span>
+                            <span id="timing-marker" class="timing-marker">
+                            </span>
+                        </div>
+                        <p id="timing-feedback" class="timing-feedback">AGUARDE O MARCADOR</p>
+                        <small>ESPACO OU CLIQUE PARA GOLPEAR</small>
+                    </div>
+                    <div class="battle-caption">UM INIMIGO SE APROXIMA</div>
+                </div>
+                <div class="battle-bottom">
+                    <div class="actions-panel panel">
+                        <div class="actions-heading">
+                            <span>ACOES</span>
+                            <small>ESCOLHA SEU MOVIMENTO</small>
+                        </div>
+                        <div class="actions-grid">
+                            <button id="attack-button" class="action-button attack" type="button">
+                                <span>⚔</span> ATACAR</button>
+                                <button id="skills-button" class="action-button" type="button">
+                                    <span>✧</span> HABILIDADES</button>
+                                    <button id="items-button" class="action-button" type="button">
+                                        <span>▣</span> ITENS</button>
+                                        <button id="defend-button" class="action-button" type="button">
+                                            <span>◈</span> DEFENDER</button>
+                                            <button id="escape-button" class="action-button escape" type="button">
+                                                <span>↗</span> FUGIR</button>
+                                            </div>
+                                        </div>
+                                        <div class="dialogue-box">
+                                            <span class="dialogue-ornament">❯</span>
+                                            <div id="dialogue-log" class="dialogue-log" aria-live="polite">
+                                            </div>
+                                            <span class="dialogue-caret">▼</span>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </section>
+                    </main>
+                    <script src="script.js">
+                    </script>
+                </body>
+            </html>

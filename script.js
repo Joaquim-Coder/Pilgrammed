@@ -1,11 +1,88 @@
 const classData = {
-	warrior: { name: 'AELRIC', label: 'GUERREIRO', hp: 120, mana: 40, stats: { FORCA: 12, DEFESA: 10, INTELIGENCIA: 3, AGILIDADE: 5, SORTE: 4 } },
-	mage: { name: 'LYSANDRA', label: 'MAGO', hp: 70, mana: 120, stats: { FORCA: 3, DEFESA: 4, INTELIGENCIA: 14, AGILIDADE: 6, SORTE: 5 } },
-	archer: { name: 'ELIRA', label: 'ARQUEIRO', hp: 90, mana: 70, stats: { FORCA: 7, DEFESA: 6, INTELIGENCIA: 5, AGILIDADE: 13, SORTE: 8 } }
+	warrior: {
+		name: 'AELRIC', label: 'GUERREIRO', hp: 120, mana: 40,
+		stats: { FORCA: 12, DEFESA: 10, INTELIGENCIA: 3, AGILIDADE: 5, SORTE: 4 }, weaponClass: 'warrior'
+	},
+	mage: {
+		name: 'LYSANDRA', label: 'MAGO', hp: 70, mana: 120,
+		stats: { FORCA: 3, DEFESA: 4, INTELIGENCIA: 14, AGILIDADE: 6, SORTE: 5 }, weaponClass: 'mage'
+	},
+	archer: {
+		name: 'ELIRA', label: 'ARQUEIRO', hp: 90, mana: 70,
+		stats: { FORCA: 7, DEFESA: 6, INTELIGENCIA: 5, AGILIDADE: 13, SORTE: 8 }, weaponClass: 'archer'
+	},
+	paladin: {
+		name: 'SERAPHINE', label: 'PALADINO', hp: 110, mana: 85,
+		stats: { FORCA: 10, DEFESA: 12, INTELIGENCIA: 8, AGILIDADE: 5, SORTE: 5 }, weaponClass: 'paladin'
+	},
+	thief: {
+		name: 'NYX', label: 'LADRÃO', hp: 85, mana: 55,
+		stats: { FORCA: 7, DEFESA: 5, INTELIGENCIA: 6, AGILIDADE: 14, SORTE: 10 }, weaponClass: 'thief'
+	}
+};
+
+const classWeapons = {
+	warrior: ['Espada Longa', 'Espada de Duas Mãos', 'Machado de Batalha', 'Machado de Duas Mãos', 'Martelo de Guerra', 'Maça', 'Mangual', 'Lança', 'Alabarda', 'Foice de Guerra', 'Montante', 'Espada e Escudo'],
+	mage: ['Cajado Mágico', 'Cajado de Batalha', 'Varinha', 'Grimório', 'Orbe Mágico', 'Cetro', 'Adaga Mágica', 'Tomo Arcano', 'Cajado de Fogo', 'Cajado de Gelo', 'Cajado de Raios', 'Cajado das Sombras', 'Cajado Sagrado'],
+	archer: ['Arco Curto', 'Arco Longo', 'Arco Composto', 'Arco de Caça', 'Arco de Guerra', 'Besta', 'Besta Leve', 'Besta Pesada', 'Besta de Repetição', 'Arco Mágico', 'Arco de Fogo', 'Arco de Gelo', 'Arco Sombrio', 'Arco Sagrado', 'Facas de Arremesso', 'Dardos'],
+	paladin: ['Espada Grande de Duas Mãos', 'Espada e escudo', 'Maça', 'Martelo', 'Lança'],
+	thief: ['Adagas', 'Facas', 'Espadas curtas', 'Bestas', 'Armas leves de arremesso']
+};
+
+const weaponConfig = {
+	nerfMultiplier: 0.7
+};
+
+const raceData = {
+	human: {
+		label: 'HUMANO', ability: 'XP E OURO AUMENTADOS',
+		description: 'Ganha mais XP e ouro em todas as recompensas.', hp: 100, mana: 80,
+		stats: { FORCA: 10, AGILIDADE: 10, DEFESA: 5 },
+		passive: { xpMultiplier: 1.25, goldMultiplier: 1.25 }
+	},
+	elf: {
+		label: 'ELFO', ability: 'GRIMORIO ARCANO',
+		description: 'Nasce com um grimorio e aprende magias com desconto.', hp: 80, mana: 150,
+		stats: { FORCA: 8, AGILIDADE: 10, DEFESA: 3 },
+		passive: { spellDiscount: 0.2, startingGrimoire: true }
+	},
+	orc: {
+		label: 'ORC', ability: 'FURIA DE SANGUE',
+		description: 'Com pouca vida, recebe defesa e fica imune a atordoamento.', hp: 150, mana: 40,
+		stats: { FORCA: 18, AGILIDADE: 6, DEFESA: 8 },
+		passive: { lowHealthThreshold: 0.15, defenseMultiplier: 1.25, stunImmune: true }
+	},
+	dwarf: {
+		label: 'ANAO', ability: 'MESTRE DA FORJA',
+		description: 'Paga menos por melhorias de equipamentos e armas.', hp: 110, mana: 90,
+		stats: { FORCA: 11, AGILIDADE: 9, DEFESA: 7 },
+		passive: { upgradeDiscount: 0.2 }
+	},
+	demon: {
+		label: 'DEMONIO', ability: 'SOMBRA INFERNAL',
+		description: 'Causa mais dano a noite e pode eliminar inimigos enfraquecidos.', hp: 120, mana: 100,
+		stats: { FORCA: 14, AGILIDADE: 10, DEFESA: 5 },
+		passive: { nightDamageMultiplier: 1.25, executeThreshold: 0.15, executeChance: 0.2 }
+	},
+	angel: {
+		label: 'ANJO', ability: 'LUZ CELESTIAL',
+		description: 'Causa mais dano durante o dia.', hp: 100, mana: 120,
+		stats: { FORCA: 13, AGILIDADE: 12, DEFESA: 6 },
+		passive: { dayDamageMultiplier: 1.25 }
+	},
+	halfHuman: {
+		label: 'DEMI-HUMANO', ability: 'AVIVADO',
+		description: 'Acertos criticos ativam velocidade e dano por tempo limitado.', hp: 100, mana: 80,
+		stats: { FORCA: 12, AGILIDADE: 15, DEFESA: 6 },
+		passive: { speedMultiplier: 1.2, damageMultiplier: 1.05, duration: 10000 }
+	}
 };
 
 const combatConfig = {
-	enemy: { name: 'Goblin', maxHp: 50, strength: 6, defense: 3, agility: 4, luck: 2 },
+	enemy: {
+		name: 'Goblin', maxHp: 50, strength: 6, defense: 3,
+		agility: 4, luck: 2, xp: 25, gold: 10
+	},
 	messagePause: 760,
 	turnPause: 900,
 	ashDuration: 900,
@@ -38,14 +115,30 @@ const combatConfig = {
 	],
 };
 
-const COMBAT_STATES = Object.freeze({ PLAYER_TURN: 'PLAYER_TURN', ENEMY_TURN: 'ENEMY_TURN', VICTORY: 'VICTORY', DEFEAT: 'DEFEAT', ESCAPED: 'ESCAPED' });
+const worldState = { timeOfDay: 'day' };
+const inventory = { items: [], spells: [], gold: 0 };
+
+const COMBAT_STATES = Object.freeze({
+	PLAYER_TURN: 'PLAYER_TURN',
+	ENEMY_TURN: 'ENEMY_TURN',
+	VICTORY: 'VICTORY',
+	DEFEAT: 'DEFEAT',
+	ESCAPED: 'ESCAPED'
+});
 
 const menuScreen = document.querySelector('#screen-menu');
 const classScreen = document.querySelector('#screen-class');
+const raceScreen = document.querySelector('#screen-race');
 const gameScreen = document.querySelector('#screen-game');
 const playButton = document.querySelector('#play-button');
 const confirmButton = document.querySelector('#confirm-button');
-const classCards = document.querySelectorAll('.class-card');
+const classCards = document.querySelectorAll('#class-grid .class-card');
+const weaponButtons = document.querySelectorAll('.weapon-list-button');
+const weaponDialog = document.querySelector('#weapon-dialog');
+const weaponDialogList = document.querySelector('#weapon-dialog-list');
+const weaponDialogClose = document.querySelector('#weapon-dialog-close');
+const raceCards = document.querySelectorAll('.race-card');
+const confirmRaceButton = document.querySelector('#confirm-race-button');
 const actionButtons = document.querySelectorAll('.action-button');
 const attackButton = document.querySelector('#attack-button');
 const skillsButton = document.querySelector('#skills-button');
@@ -64,6 +157,8 @@ const playerHpBar = document.querySelector('#hp-bar');
 const playerManaBar = document.querySelector('#mana-bar');
 const playerXpBar = document.querySelector('#xp-bar');
 let selectedClass = null;
+let selectedRace = null;
+let weaponDialogTrigger = null;
 let player = null;
 let enemy = null;
 let combatState = COMBAT_STATES.PLAYER_TURN;
@@ -75,10 +170,11 @@ const dialogueQueue = [];
 let isProcessingDialogue = false;
 let previousPlayerHp = null;
 let previousEnemyHp = null;
+let avivadoTimeout = null;
 dialogueLog.style.setProperty('--ash-duration', `${combatConfig.ashDuration}ms`);
 
 function showScreen(screenToShow) {
-	[menuScreen, classScreen, gameScreen].forEach((screen) => {
+	[menuScreen, classScreen, raceScreen, gameScreen].forEach((screen) => {
 		screen.classList.toggle('is-hidden', screen !== screenToShow);
 	});
 }
@@ -93,19 +189,210 @@ function selectClass(card) {
 	confirmButton.disabled = false;
 }
 
+function closeWeaponDialog() {
+	weaponDialog.classList.add('is-hidden');
+	weaponDialogTrigger?.focus();
+	weaponDialogTrigger = null;
+}
+
+function selectRace(card) {
+	raceCards.forEach((item) => {
+		const isSelected = item === card;
+		item.classList.toggle('is-selected', isSelected);
+		item.setAttribute('aria-pressed', String(isSelected));
+	});
+	selectedRace = card.dataset.race;
+	confirmRaceButton.disabled = false;
+}
+
+function createCharacter(classKey, raceKey) {
+	const classChoice = classData[classKey];
+	const raceChoice = raceData[raceKey];
+	const stats = { ...classChoice.stats };
+	Object.entries(raceChoice.stats).forEach(([stat, value]) => { stats[stat] = (stats[stat] || 0) + value; });
+	return {
+		...classChoice,
+		hp: classChoice.hp + raceChoice.hp,
+		mana: classChoice.mana + raceChoice.mana,
+		stats,
+		race: raceKey,
+		raceLabel: raceChoice.label,
+		ability: raceChoice.ability,
+		currentHp: classChoice.hp + raceChoice.hp,
+		currentMana: classChoice.mana + raceChoice.mana,
+		weapon: { name: `${classChoice.label} inicial`, class: classChoice.weaponClass },
+		isAvivado: false,
+		speedMultiplier: 1,
+		damageMultiplier: 1
+	};
+}
+
+function saveCharacter() {
+	const characterData = {
+		class: selectedClass,
+		race: selectedRace,
+		xp: player ? player.xp || 0 : 0,
+		inventory
+	};
+	localStorage.setItem('pilgrammed-character', JSON.stringify(characterData));
+}
+
+function loadSavedCharacter() {
+	try {
+		const saved = JSON.parse(localStorage.getItem('pilgrammed-character'));
+		if (!saved) return false;
+		selectedClass = classData[saved.class] ? saved.class : null;
+		selectedRace = raceData[saved.race] ? saved.race : null;
+		if (saved.inventory) {
+			inventory.items = Array.isArray(saved.inventory.items) ? saved.inventory.items : [];
+			inventory.spells = Array.isArray(saved.inventory.spells) ? saved.inventory.spells : [];
+			inventory.gold = Number(saved.inventory.gold) || 0;
+		}
+		if (!selectedClass || !selectedRace) return false;
+		populateHud();
+		player.xp = Number(saved.xp) || 0;
+		saveCharacter();
+		return true;
+	} catch (error) {
+		localStorage.removeItem('pilgrammed-character');
+		return false;
+	}
+}
+
+function restoreSelectionCards() {
+	const selectedClassCard = [...classCards].find((card) => card.dataset.class === selectedClass);
+	const selectedRaceCard = [...raceCards].find((card) => card.dataset.race === selectedRace);
+	if (selectedClassCard) selectClass(selectedClassCard);
+	if (selectedRaceCard) selectRace(selectedRaceCard);
+}
+
+function startBattle() {
+	if (!classData[selectedClass] || !raceData[selectedRace]) return false;
+	showScreen(gameScreen);
+	resetCombat();
+	return true;
+}
+
 function populateHud() {
-	const data = classData[selectedClass];
-	player = { ...data, currentHp: data.hp, currentMana: data.mana };
+	player = createCharacter(selectedClass, selectedRace);
+	grantStartingItems();
+	saveCharacter();
 	previousPlayerHp = null;
 	previousEnemyHp = null;
-	document.querySelector('#character-name').textContent = data.name;
-	document.querySelector('#character-class').textContent = data.label;
-	document.querySelector('#hp-value').textContent = `${data.hp} / ${data.hp}`;
-	document.querySelector('#mana-value').textContent = `${data.mana} / ${data.mana}`;
+	document.querySelector('#character-name').textContent = player.name;
+	document.querySelector('#character-class').textContent = player.label;
+	document.querySelector('#character-race').textContent = `${player.raceLabel} | ${player.ability}`;
+	document.querySelector('#hp-value').textContent = `${player.hp} / ${player.hp}`;
+	document.querySelector('#mana-value').textContent = `${player.mana} / ${player.mana}`;
 	playerHpBar.style.width = '100%';
 	playerManaBar.style.width = '100%';
 	playerXpBar.style.width = '0%';
-	document.querySelector('#hud-stats').innerHTML = Object.entries(data.stats).map(([stat, value]) => `<div><dt>${stat}</dt><dd>${value}</dd><button type="button" disabled aria-label="Adicionar ponto em ${stat}">+</button></div>`).join('');
+	document.querySelector('#hud-stats').innerHTML = Object.entries(player.stats).map(([stat, value]) => `<div><dt>${stat}</dt><dd>${value}</dd><button type="button" disabled aria-label="Adicionar ponto em ${stat}">+</button></div>`).join('');
+}
+
+function getRacePassive() {
+	return raceData[player.race].passive;
+}
+
+function isLowHealth(character = player) {
+	return character.currentHp < character.hp * getRacePassive().lowHealthThreshold;
+}
+
+function getDefense(character) {
+	const baseDefense = character.stats ? character.stats.DEFESA : character.defense;
+	if (character === player && player.race === 'orc' && isLowHealth()) {
+		return Math.floor(baseDefense * getRacePassive().defenseMultiplier);
+	}
+	return baseDefense;
+}
+
+function canBeStunned(character = player) {
+	return !(character === player && player.race === 'orc' && isLowHealth());
+}
+
+function calculateXpReward(baseXp) {
+	return Math.floor(baseXp * (player.race === 'human' ? getRacePassive().xpMultiplier : 1));
+}
+
+function calculateGoldReward(baseGold) {
+	return Math.floor(baseGold * (player.race === 'human' ? getRacePassive().goldMultiplier : 1));
+}
+
+function addXp(baseXp) {
+	const reward = calculateXpReward(baseXp);
+	player.xp = (player.xp || 0) + reward;
+	saveCharacter();
+	return reward;
+}
+
+function addGold(baseGold) {
+	const reward = calculateGoldReward(baseGold);
+	inventory.gold += reward;
+	saveCharacter();
+	return reward;
+}
+
+function calculateSpellCost(baseCost) {
+	return Math.max(0, Math.ceil(baseCost * (player.race === 'elf' ? 1 - getRacePassive().spellDiscount : 1)));
+}
+
+function grantStartingItems() {
+	if (player.race === 'elf' && !inventory.items.includes('GRIMORIO')) {
+		inventory.items.push('GRIMORIO');
+	}
+}
+
+function equipWeapon(weapon) {
+	if (!player || !weapon || typeof weapon.class !== 'string') return false;
+	player.weapon = weapon;
+	return true;
+}
+
+function getWeaponDamageMultiplier(attacker) {
+	if (attacker !== player || !attacker.weapon) return 1;
+	return attacker.weapon.class === classData[selectedClass].weaponClass ? 1 : weaponConfig.nerfMultiplier;
+}
+
+function learnSpell(spell, baseCost) {
+	const cost = calculateSpellCost(baseCost);
+	inventory.spells.push({ ...spell, cost });
+	return cost;
+}
+
+function buySpell(spell, baseCost) {
+	return learnSpell(spell, baseCost);
+}
+
+function recordSpell(spell, baseCost) {
+	return learnSpell(spell, baseCost);
+}
+
+function calculateUpgradeCost(baseCost) {
+	return Math.max(0, Math.ceil(baseCost * (player.race === 'dwarf' ? 1 - getRacePassive().upgradeDiscount : 1)));
+}
+
+function upgradeEquipment(equipment, baseCost, applyUpgrade) {
+	const cost = calculateUpgradeCost(baseCost);
+	applyUpgrade(equipment);
+	return cost;
+}
+
+function setTimeOfDay(timeOfDay) {
+	worldState.timeOfDay = timeOfDay === 'night' ? 'night' : 'day';
+}
+
+function activateAvivado() {
+	if (player.race !== 'halfHuman') return;
+	const passive = getRacePassive();
+	player.isAvivado = true;
+	player.speedMultiplier = passive.speedMultiplier;
+	player.damageMultiplier = passive.damageMultiplier;
+	window.clearTimeout(avivadoTimeout);
+	avivadoTimeout = window.setTimeout(() => {
+		player.isAvivado = false;
+		player.speedMultiplier = 1;
+		player.damageMultiplier = 1;
+	}, passive.duration);
 }
 
 function delay(duration) {
@@ -224,15 +511,22 @@ function evadesAttack(defender) {
 }
 
 function determineInitiative(playerData, enemyData) {
-	const agilityDifference = playerData.stats.AGILIDADE - enemyData.agility;
+	const agilityDifference = playerData.stats.AGILIDADE * (playerData.speedMultiplier || 1) - enemyData.agility;
 	const playerChance = Math.max(0.5 - combatConfig.initiativeMaxShift, Math.min(0.5 + combatConfig.initiativeMaxShift, 0.5 + agilityDifference * combatConfig.initiativeAgilityFactor));
 	return Math.random() < playerChance;
 }
 
 function calculateAttack(attacker, defenderDefense) {
 	const critical = isCritical(attacker);
-	const normalDamage = randomDamage(attacker.strength || attacker.stats.FORCA, defenderDefense);
-	return { critical, damage: critical ? Math.max(normalDamage + 1, Math.floor(normalDamage * combatConfig.criticalMultiplier)) : normalDamage };
+	let normalDamage = randomDamage(attacker.strength || attacker.stats.FORCA, defenderDefense);
+	if (attacker === player) {
+		const passive = getRacePassive();
+		if (player.race === 'demon' && worldState.timeOfDay === 'night') normalDamage *= passive.nightDamageMultiplier;
+		if (player.race === 'angel' && worldState.timeOfDay === 'day') normalDamage *= passive.dayDamageMultiplier;
+		normalDamage *= player.damageMultiplier || 1;
+		normalDamage *= getWeaponDamageMultiplier(attacker);
+	}
+	return { critical, damage: critical ? Math.max(normalDamage + 1, Math.floor(normalDamage * combatConfig.criticalMultiplier)) : Math.floor(normalDamage) };
 }
 
 function calculateTimingQuality(position) {
@@ -330,7 +624,7 @@ async function enemyTurn() {
 		await finishEnemyTurn();
 		return;
 	}
-	const attackResult = calculateAttack(enemy, player.stats.DEFESA);
+	const attackResult = calculateAttack(enemy, getDefense(player));
 	let damage = attackResult.damage;
 	if (isDefending) {
 		damage = Math.max(1, Math.floor(damage * combatConfig.defenseMultiplier));
@@ -375,8 +669,13 @@ async function attack() {
 		return;
 	}
 	const attackResult = calculateAttack(player, enemy.defense);
-	const damage = Math.max(1, Math.floor(attackResult.damage * timingResult.multiplier));
+	let damage = Math.max(1, Math.floor(attackResult.damage * timingResult.multiplier));
+	if (player.race === 'demon' && enemy.currentHp < enemy.maxHp * getRacePassive().executeThreshold && Math.random() < getRacePassive().executeChance) {
+		damage = enemy.currentHp;
+		await setDialogue('A sombra infernal executou o inimigo!');
+	}
 	enemy.currentHp = Math.max(0, enemy.currentHp - damage);
+	if (attackResult.critical) activateAvivado();
 	updateHpDisplays();
 	if (attackResult.critical) {
 		await setDialogue('ACERTO CRITICO!');
@@ -385,7 +684,10 @@ async function attack() {
 		await setDialogue(`${enemy.name} sofreu ${damage} de dano.`);
 	}
 	if (enemy.currentHp <= 0) {
+		const xpReward = addXp(enemy.xp);
+		const goldReward = addGold(enemy.gold);
 		await finishCombat(COMBAT_STATES.VICTORY, `${enemy.name} foi derrotado!`);
+		await setDialogue(`Voce recebeu ${xpReward} XP e ${goldReward} ouro.`);
 		await setDialogue('Voce venceu a batalha!');
 		return;
 	}
@@ -412,18 +714,66 @@ async function escape() {
 	await enemyTurn();
 }
 
-playButton.addEventListener('click', () => showScreen(classScreen));
+playButton.addEventListener('click', () => {
+	selectedClass = null;
+	selectedRace = null;
+	classCards.forEach((card) => {
+		card.classList.remove('is-selected');
+		card.setAttribute('aria-pressed', 'false');
+	});
+	raceCards.forEach((card) => {
+		card.classList.remove('is-selected');
+		card.setAttribute('aria-pressed', 'false');
+	});
+	confirmButton.disabled = true;
+	confirmRaceButton.disabled = true;
+	showScreen(raceScreen);
+});
 classCards.forEach((card) => {
 	card.addEventListener('click', () => selectClass(card));
 	card.addEventListener('keydown', (event) => {
+		if (event.target !== card) return;
 		if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectClass(card); }
 	});
 });
+weaponButtons.forEach((button) => {
+	button.addEventListener('click', (event) => {
+		event.stopPropagation();
+		const weapons = classWeapons[button.dataset.weaponsFor];
+		if (!weapons) return;
+		weaponDialogTrigger = button;
+		weaponDialogList.replaceChildren(...weapons.map((weapon) => {
+			const item = document.createElement('li');
+			item.textContent = weapon;
+			return item;
+		}));
+		weaponDialog.classList.remove('is-hidden');
+		weaponDialogClose.focus();
+	});
+});
+weaponDialogClose.addEventListener('click', closeWeaponDialog);
+weaponDialog.addEventListener('click', (event) => {
+	if (event.target === weaponDialog.querySelector('.weapon-dialog-backdrop')) closeWeaponDialog();
+});
+document.addEventListener('keydown', (event) => {
+	if (event.key === 'Escape' && !weaponDialog.classList.contains('is-hidden')) closeWeaponDialog();
+});
 confirmButton.addEventListener('click', () => {
 	if (!selectedClass) return;
+	if (!selectedRace) return;
 	populateHud();
-	showScreen(gameScreen);
-	resetCombat();
+	startBattle();
+});
+
+raceCards.forEach((card) => {
+	card.addEventListener('click', () => selectRace(card));
+	card.addEventListener('keydown', (event) => {
+		if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectRace(card); }
+	});
+});
+confirmRaceButton.addEventListener('click', () => {
+	if (!raceData[selectedRace]) return;
+	showScreen(classScreen);
 });
 
 attackButton.addEventListener('click', attack);
